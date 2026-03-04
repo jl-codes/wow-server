@@ -3,772 +3,744 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Dwarves Adventure Co. — Competitive WoW, Real Stakes</title>
+    <title>7 Dwarves Adventure Co.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --mint: #39ff85;
             --mint-dim: #1a9e4e;
-            --mint-glow: rgba(57, 255, 133, 0.15);
-            --mint-bright: #7affb2;
-            --black: #0a0a0a;
-            --black-card: #0d0d0d;
-            --gray-dark: #1a1a1a;
-            --gray: #2a2a2a;
-            --gray-mid: #444;
-            --gray-light: #888;
-            --text: #b0b0b0;
-            --text-bright: #d0d0d0;
+            --mint-ghost: rgba(57, 255, 133, 0.08);
             --amber: #ffaa00;
-            --red: #ff4444;
-            --font-mono: 'Share Tech Mono', 'Courier New', monospace;
-            --font-body: 'Space Grotesk', -apple-system, sans-serif;
-            --text-xs: 0.64rem; --text-sm: 0.8rem; --text-base: 1rem;
-            --text-md: 1.25rem; --text-lg: 1.563rem; --text-xl: 1.953rem;
-            --text-2xl: 2.441rem; --text-3xl: 3.052rem; --text-4xl: 3.815rem;
-            --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-            --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
-            --sp-12: 48px; --sp-16: 64px; --sp-20: 80px; --sp-24: 96px;
-            --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
-            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --duration-fast: 150ms; --duration-normal: 300ms; --duration-slow: 600ms;
+            --amber-dim: rgba(255, 170, 0, 0.6);
+            --black: #0a0a0a;
+            --gray-dark: #151515;
+            --gray: #1e1e1e;
+            --gray-mid: #333;
+            --gray-text: #555;
+            --text: #777;
+            --text-bright: #999;
+            --font: 'Share Tech Mono', 'Courier New', monospace;
         }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
+
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
         html { scroll-behavior: smooth; }
+
         body {
-            font-family: var(--font-body); background: var(--black); color: var(--text);
-            font-size: var(--text-base); line-height: 1.6; overflow-x: hidden;
+            font-family: var(--font);
+            background: var(--black);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.8;
+            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
+
+        /* ── CRT Scanlines ── */
         body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: '';
+            position: fixed; inset: 0;
             pointer-events: none; z-index: 9999;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 3px,
+                rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 6px
+            );
         }
+
+        /* ── Vignette ── */
         body::after {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: '';
+            position: fixed; inset: 0;
             pointer-events: none; z-index: 9998;
-            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%);
         }
-        .parallax-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; }
-        .parallax-layer { position: absolute; width: 100%; height: 120%; top: -10%; }
-        .parallax-grid {
-            background-image: linear-gradient(rgba(57,255,133,0.025) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(57,255,133,0.025) 1px, transparent 1px);
-            background-size: 60px 60px;
+
+        /* ── Subtle grid ── */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: -1;
+            background-image:
+                linear-gradient(rgba(57,255,133,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(57,255,133,0.015) 1px, transparent 1px);
+            background-size: 80px 80px;
         }
-        .weapon-canvas { position: fixed; top: 0; width: 200px; height: 100vh; pointer-events: none; z-index: 1; opacity: 0.7; }
-        .weapon-canvas-left { left: 20px; }
-        .weapon-canvas-right { right: 20px; }
-        @media (max-width: 1200px) { .weapon-canvas { opacity: 0.3; width: 120px; } .weapon-canvas-left { left: 5px; } .weapon-canvas-right { right: 5px; } }
+
+        /* ── Grain overlay ── */
+        .grain {
+            position: fixed; inset: 0; z-index: 9997;
+            pointer-events: none;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* ── ASCII Weapons (margins) ── */
+        .weapon-canvas {
+            position: fixed; top: 0;
+            width: 200px; height: 100vh;
+            pointer-events: none; z-index: 1;
+            opacity: 0.5;
+        }
+        .weapon-left { left: 20px; }
+        .weapon-right { right: 20px; }
+        @media (max-width: 1200px) { .weapon-canvas { opacity: 0.2; width: 120px; } .weapon-left { left: 5px; } .weapon-right { right: 5px; } }
         @media (max-width: 800px) { .weapon-canvas { display: none; } }
 
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
-        .stagger > .reveal:nth-child(1) { transition-delay: 0ms; }
-        .stagger > .reveal:nth-child(2) { transition-delay: 80ms; }
-        .stagger > .reveal:nth-child(3) { transition-delay: 160ms; }
-        .stagger > .reveal:nth-child(4) { transition-delay: 240ms; }
-        .stagger > .reveal:nth-child(5) { transition-delay: 320ms; }
-        .stagger > .reveal:nth-child(6) { transition-delay: 400ms; }
-        .stagger > .reveal:nth-child(7) { transition-delay: 480ms; }
-        .stagger > .reveal:nth-child(8) { transition-delay: 560ms; }
-        .stagger > .reveal:nth-child(9) { transition-delay: 640ms; }
-        .stagger > .reveal:nth-child(10) { transition-delay: 720ms; }
-        .stagger > .reveal:nth-child(11) { transition-delay: 800ms; }
-        .stagger > .reveal:nth-child(12) { transition-delay: 880ms; }
-
-        @keyframes glow-pulse { 0%, 100% { text-shadow: 0 0 10px rgba(57,255,133,0.3), 0 0 20px rgba(57,255,133,0.1); } 50% { text-shadow: 0 0 15px rgba(57,255,133,0.5), 0 0 30px rgba(57,255,133,0.2); } }
-        @keyframes flicker { 0%,100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: 0.85; } 94% { opacity: 1; } 96% { opacity: 0.92; } 97% { opacity: 1; } }
-        .crt-flicker { animation: flicker 8s infinite; }
-        @keyframes grain-shift { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 1px); } 50% { transform: translate(1px, -1px); } 75% { transform: translate(-1px, 2px); } 100% { transform: translate(0, 0); } }
-        @keyframes float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
-
-        /* ═══ HERO ═══ */
-        .hero { position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: var(--sp-8); }
-        .hero-content { position: relative; z-index: 2; max-width: 760px; }
-        .terminal-prompt { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--mint-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: var(--sp-6); display: flex; align-items: center; justify-content: center; gap: var(--sp-2); }
-        .terminal-prompt::before { content: '>'; color: var(--mint); font-weight: bold; }
-        .hero-title { font-family: var(--font-mono); font-size: clamp(var(--text-2xl), 5.5vw, var(--text-4xl)); font-weight: 400; color: var(--mint); line-height: 1.1; margin-bottom: var(--sp-4); text-shadow: 0 0 20px rgba(57,255,133,0.3), 0 0 40px rgba(57,255,133,0.1); animation: glow-pulse 4s ease-in-out infinite; }
-        .hero-title .line-2 { display: block; font-size: 0.4em; color: var(--mint-dim); text-shadow: none; margin-top: var(--sp-3); letter-spacing: 4px; text-transform: uppercase; animation: none; }
-        .hero-tagline { font-family: var(--font-mono); font-size: var(--text-md); color: var(--amber); margin-bottom: var(--sp-6); letter-spacing: 1px; }
-        .hero-desc { font-size: var(--text-base); color: var(--text); margin-bottom: var(--sp-10); line-height: 1.8; max-width: 580px; margin-left: auto; margin-right: auto; }
-        .hero-desc strong { color: var(--mint-bright); }
-        .btn-group { display: flex; gap: var(--sp-4); justify-content: center; flex-wrap: wrap; margin-bottom: var(--sp-12); }
-        .btn { font-family: var(--font-mono); font-size: var(--text-sm); padding: var(--sp-3) var(--sp-6); border-radius: 2px; text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); cursor: pointer; border: none; display: inline-flex; align-items: center; gap: var(--sp-2); }
-        .btn:active { transform: translateY(0) !important; }
-        .btn-primary { background: var(--mint); color: var(--black); box-shadow: 0 0 20px rgba(57,255,133,0.2), inset 0 0 20px rgba(255,255,255,0.1); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(57,255,133,0.4), 0 4px 12px rgba(0,0,0,0.3); }
-        .btn-ghost { background: transparent; color: var(--mint); border: 1px solid rgba(57,255,133,0.3); }
-        .btn-ghost:hover { background: rgba(57,255,133,0.05); border-color: var(--mint); transform: translateY(-2px); box-shadow: 0 0 15px rgba(57,255,133,0.1); }
-        .seats-counter { display: flex; align-items: center; justify-content: center; gap: var(--sp-6); flex-wrap: wrap; }
-        .seat-block { text-align: center; }
-        .seat-val { font-family: var(--font-mono); font-size: var(--text-xl); color: var(--mint); text-shadow: 0 0 10px rgba(57,255,133,0.3); }
-        .seat-val.amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,170,0,0.3); }
-        .seat-lbl { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-light); text-transform: uppercase; letter-spacing: 3px; margin-top: var(--sp-1); }
-        .scroll-hint { position: absolute; bottom: var(--sp-8); left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-mid); letter-spacing: 2px; text-transform: uppercase; animation: float 3s ease-in-out infinite; }
-        .scroll-hint::after { content: ''; display: block; width: 1px; height: 24px; background: linear-gradient(to bottom, var(--mint-dim), transparent); margin: var(--sp-2) auto 0; }
-
-        /* ═══ SECTIONS ═══ */
-        .section { padding: var(--sp-24) var(--sp-8); max-width: 960px; margin: 0 auto; position: relative; }
-        .section-header { text-align: center; margin-bottom: var(--sp-16); }
-        .section-label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--mint-dim); letter-spacing: 4px; text-transform: uppercase; margin-bottom: var(--sp-3); display: flex; align-items: center; justify-content: center; gap: var(--sp-3); }
-        .section-label::before, .section-label::after { content: ''; width: 24px; height: 1px; background: var(--mint-dim); opacity: 0.4; }
-        .section-title { font-family: var(--font-mono); font-size: var(--text-xl); color: var(--mint); font-weight: 400; text-shadow: 0 0 10px rgba(57,255,133,0.2); }
-        .section-desc { color: var(--gray-light); margin-top: var(--sp-3); max-width: 540px; margin-left: auto; margin-right: auto; font-size: var(--text-sm); line-height: 1.7; }
-
-        /* ═══ BENTO GRID ═══ */
-        .bento-section { padding: var(--sp-12) var(--sp-4); max-width: 1100px; margin: 0 auto; }
-        .bento-section .section-header { margin-bottom: var(--sp-8); }
-        .bento {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: auto;
-            gap: 3px;
-        }
-        .bento-cell {
-            background: var(--black-card);
-            border: 1px solid var(--gray-dark);
-            border-radius: 2px;
-            overflow: hidden;
+        /* ── The Scroll ── */
+        .transmission {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 24px;
             position: relative;
-            min-height: 180px;
-            transition: border-color var(--duration-normal) var(--ease-out);
+            z-index: 2;
         }
-        .bento-cell:hover { border-color: rgba(57,255,133,0.25); }
-        /* Tall cells span 2 rows */
-        .bento-tall { grid-row: span 2; min-height: 363px; }
-        /* Wide cells span 2 cols */
-        .bento-wide { grid-column: span 2; }
 
-        /* Portrait cells */
-        .bento-portrait {
-            cursor: pointer;
-            display: flex; flex-direction: column;
-            transition: border-color var(--duration-normal) var(--ease-out), transform var(--duration-fast) var(--ease-spring);
+        /* ── Fade-in on scroll ── */
+        .fade {
+            opacity: 0;
+            transition: opacity 1.2s ease;
         }
-        .bento-portrait:hover { transform: translateY(-2px); border-color: rgba(57,255,133,0.4); }
-        .bento-portrait pre {
-            font-family: var(--font-mono);
-            font-size: 5.5px;
-            line-height: 6.5px;
-            letter-spacing: 0.5px;
-            color: var(--mint-dim);
-            padding: var(--sp-3);
-            flex: 1;
-            display: flex; align-items: center; justify-content: center;
-            white-space: pre;
-            overflow: hidden;
-            transition: color var(--duration-normal) var(--ease-out), text-shadow var(--duration-normal) var(--ease-out);
-            user-select: none;
-        }
-        .bento-portrait:hover pre {
+        .fade.visible { opacity: 1; }
+
+        /* ── Spacers ── */
+        .breath { height: 100vh; }
+        .breath-half { height: 50vh; }
+        .breath-quarter { height: 25vh; }
+        .gap { height: 80px; }
+        .gap-sm { height: 40px; }
+
+        /* ── Typography ── */
+        .title {
+            font-size: clamp(28px, 5vw, 48px);
             color: var(--mint);
-            text-shadow: 0 0 8px rgba(57,255,133,0.3);
+            line-height: 1.1;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(57,255,133,0.2), 0 0 60px rgba(57,255,133,0.08);
         }
-        .bento-portrait .portrait-label {
-            padding: var(--sp-1) var(--sp-3) var(--sp-2);
-            font-family: var(--font-mono); font-size: 9px;
-            color: var(--mint-dim); letter-spacing: 2px; text-transform: uppercase;
+
+        .subtitle {
+            font-size: clamp(12px, 2vw, 16px);
+            color: var(--amber);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .prose {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 2;
+            max-width: 480px;
+        }
+        .prose em {
+            color: var(--text-bright);
+            font-style: normal;
+        }
+        .prose strong {
+            color: var(--mint-dim);
+            font-weight: 400;
+        }
+
+        .big-text {
+            font-size: clamp(16px, 3vw, 22px);
+            color: var(--text-bright);
+            line-height: 1.6;
+        }
+        .big-text strong {
+            color: var(--mint);
+            font-weight: 400;
+            text-shadow: 0 0 10px rgba(57,255,133,0.15);
+        }
+
+        .dim { color: var(--gray-text); }
+        .mint { color: var(--mint-dim); }
+        .amber { color: var(--amber-dim); }
+        .bright { color: var(--text-bright); }
+
+        /* ── Readout (terminal-style data) ── */
+        .readout {
+            border-left: 1px solid var(--gray);
+            padding-left: 20px;
+        }
+        .readout-line {
+            display: flex;
+            gap: 16px;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .readout-key {
+            color: var(--gray-text);
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+        .readout-key::before { content: '> '; color: var(--gray-mid); }
+        .readout-val { color: var(--mint-dim); }
+        .readout-val.amber { color: var(--amber-dim); }
+
+        /* ── Lava horizon line ── */
+        .horizon {
+            width: 100%;
+            height: 20px;
+            overflow: hidden;
+            opacity: 0.4;
+        }
+        .horizon canvas {
+            width: 100%; height: 100%;
+            display: block;
+        }
+
+        /* ── The Button ── */
+        .cta {
+            display: inline-block;
+            font-family: var(--font);
+            font-size: 14px;
+            color: var(--black);
+            background: var(--mint);
+            padding: 12px 32px;
+            border: none;
+            border-radius: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease, transform 0.15s ease;
+            box-shadow: 0 0 20px rgba(57,255,133,0.15);
+        }
+        .cta:hover {
+            box-shadow: 0 0 40px rgba(57,255,133,0.3), 0 0 80px rgba(57,255,133,0.1);
+            transform: translateY(-1px);
+        }
+        .cta:active { transform: translateY(0); }
+
+        /* ── Ghost link ── */
+        a.ghost {
+            color: var(--gray-text);
+            text-decoration: none;
+            border-bottom: 1px solid var(--gray);
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        a.ghost:hover {
+            color: var(--mint-dim);
+            border-color: var(--mint-dim);
+        }
+
+        /* ── Collapsible docs ── */
+        .doc-link {
+            display: block;
+            padding: 8px 0;
+            color: var(--gray-text);
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 1px;
+            transition: color 0.2s ease;
+        }
+        .doc-link::before { content: '// '; color: var(--gray-mid); }
+        .doc-link:hover { color: var(--mint-dim); }
+
+        .doc-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            border-left: 1px solid var(--gray);
+            margin-left: 16px;
+            padding-left: 16px;
+        }
+        .doc-content.open { max-height: 2000px; }
+        .doc-content p, .doc-content li {
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+        .doc-content li::before { content: '— '; color: var(--gray-mid); }
+        .doc-content li { list-style: none; }
+        .doc-content code {
+            background: var(--gray-dark);
+            color: var(--mint-dim);
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+        .doc-content .terminal {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--gray);
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 13px;
+            color: var(--mint-dim);
+            position: relative;
+        }
+        .doc-content .terminal::before { content: '$ '; color: var(--gray-mid); }
+        .doc-content .terminal .cp {
+            position: absolute; top: 4px; right: 4px;
+            font-size: 10px; color: var(--gray-mid);
+            background: none; border: 1px solid var(--gray);
+            padding: 1px 6px; cursor: pointer;
+            font-family: var(--font); letter-spacing: 1px;
+            transition: color 0.2s ease;
+        }
+        .doc-content .terminal .cp:hover { color: var(--mint-dim); }
+
+        /* ── ASCII art centerpiece ── */
+        .ascii-centerpiece {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
             text-align: center;
-            border-top: 1px solid var(--gray-dark);
-            background: rgba(0,0,0,0.4);
         }
-        .bento-portrait .portrait-label span {
-            display: block; font-size: 7px; color: var(--gray-mid); margin-top: 1px; letter-spacing: 1px;
-        }
-        /* Grain on portraits */
-        .bento-portrait::after {
-            content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-            opacity: 0.3; animation: grain-shift 0.5s steps(4) infinite;
-        }
-        /* Emote bubble on portraits */
-        .bento-portrait .emote-bubble {
-            position: absolute; top: var(--sp-2); left: 50%; transform: translateX(-50%);
-            font-family: var(--font-mono); font-size: var(--text-xs); color: var(--amber);
-            white-space: nowrap; padding: var(--sp-1) var(--sp-2);
-            background: rgba(0,0,0,0.9); border: 1px solid rgba(255,170,0,0.3); border-radius: 2px;
-            opacity: 0; pointer-events: none; z-index: 5;
-            transition: opacity 0.2s ease;
-        }
-        .bento-portrait .emote-bubble.show { opacity: 1; }
-
-        /* Lava cells */
-        .bento-lava { padding: 0; }
-        .bento-lava canvas { width: 100%; height: 100%; display: block; }
-
-        @media (max-width: 800px) {
-            .bento { grid-template-columns: repeat(3, 1fr); }
-            .bento-tall { grid-row: span 1; min-height: 180px; }
-        }
-        @media (max-width: 540px) {
-            .bento { grid-template-columns: repeat(2, 1fr); }
-            .bento-portrait pre { font-size: 4.5px; line-height: 5.5px; }
+        .ascii-centerpiece canvas {
+            width: 100%;
+            height: 300px;
+            display: block;
         }
 
-        /* ═══ LAVA DIVIDERS ═══ */
-        .lava-divider { width: 100%; height: 100px; overflow: hidden; position: relative; }
-        .lava-divider.lava-sm { height: 60px; }
-        .lava-divider.lava-lg { height: 140px; }
-        .lava-divider canvas { width: 100%; height: 100%; display: block; }
+        /* ── Footer ── */
+        .footer {
+            font-size: 11px;
+            color: var(--gray-mid);
+            letter-spacing: 1px;
+            line-height: 2;
+        }
+        .footer a {
+            color: var(--gray-text);
+            text-decoration: none;
+            border-bottom: 1px solid var(--gray);
+        }
+        .footer a:hover { color: var(--mint-dim); border-color: var(--mint-dim); }
 
-        /* ═══ HOW IT WORKS ═══ */
-        .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); }
-        .how-card { padding: var(--sp-6); background: var(--black-card); border: 1px solid var(--gray-dark); border-radius: 2px; transition: border-color var(--duration-normal) var(--ease-out), transform var(--duration-fast) var(--ease-spring); position: relative; overflow: hidden; }
-        .how-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--mint-dim), transparent); opacity: 0; transition: opacity var(--duration-normal) var(--ease-out); }
-        .how-card:hover { border-color: rgba(57,255,133,0.2); transform: translateY(-2px); }
-        .how-card:hover::before { opacity: 1; }
-        .how-num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--mint-dim); letter-spacing: 2px; margin-bottom: var(--sp-3); }
-        .how-card h3 { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--mint-bright); font-weight: 400; margin-bottom: var(--sp-2); }
-        .how-card p { font-size: var(--text-sm); color: var(--gray-light); line-height: 1.7; }
-
-        /* ═══ ECONOMY ═══ */
-        .econ-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); margin-top: var(--sp-8); }
-        .econ-card { padding: var(--sp-6); background: var(--black-card); border: 1px solid var(--gray-dark); border-radius: 2px; text-align: center; transition: border-color var(--duration-normal) var(--ease-out); }
-        .econ-card:hover { border-color: rgba(57,255,133,0.15); }
-        .econ-val { font-family: var(--font-mono); font-size: var(--text-2xl); color: var(--mint); text-shadow: 0 0 10px rgba(57,255,133,0.2); }
-        .econ-val.amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,170,0,0.2); }
-        .econ-label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-light); text-transform: uppercase; letter-spacing: 2px; margin-top: var(--sp-2); }
-        .econ-desc { font-size: var(--text-xs); color: var(--gray-mid); margin-top: var(--sp-2); line-height: 1.5; }
-
-        .prize-table { width: 100%; border-collapse: collapse; margin-top: var(--sp-8); font-family: var(--font-mono); font-size: var(--text-sm); }
-        .prize-table th { text-align: left; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid rgba(57,255,133,0.2); color: var(--mint-dim); font-weight: 400; letter-spacing: 2px; text-transform: uppercase; font-size: var(--text-xs); }
-        .prize-table td { padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--gray-dark); color: var(--text); }
-        .prize-table td:last-child { color: var(--mint); text-align: right; }
-        .prize-table tr:hover td { background: rgba(57,255,133,0.02); }
-
-        /* ═══ STEPS ═══ */
-        .steps-list { display: grid; gap: var(--sp-4); max-width: 680px; margin: 0 auto; }
-        .step-card { display: grid; grid-template-columns: 48px 1fr; gap: var(--sp-5); padding: var(--sp-6); background: var(--black-card); border: 1px solid var(--gray-dark); border-radius: 2px; transition: border-color var(--duration-normal) var(--ease-out), transform var(--duration-fast) var(--ease-spring); }
-        .step-card:hover { border-color: rgba(57,255,133,0.15); transform: translateX(4px); }
-        .step-num { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--mint); text-shadow: 0 0 10px rgba(57,255,133,0.3); line-height: 1; padding-top: var(--sp-1); }
-        .step-body h3 { font-family: var(--font-mono); font-size: var(--text-base); color: var(--mint-bright); font-weight: 400; margin-bottom: var(--sp-2); }
-        .step-body p { font-size: var(--text-sm); color: var(--text); line-height: 1.7; }
-        .step-body a { color: var(--mint); text-decoration: none; border-bottom: 1px solid rgba(57,255,133,0.3); transition: border-color var(--duration-fast) var(--ease-out); }
-        .step-body a:hover { border-color: var(--mint); }
-        .step-body code { font-family: var(--font-mono); font-size: var(--text-sm); background: rgba(57,255,133,0.05); color: var(--mint); padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(57,255,133,0.1); }
-        .step-body .warning { font-size: var(--text-xs); color: var(--amber); margin-top: var(--sp-2); opacity: 0.8; }
-        .terminal-block { background: rgba(0,0,0,0.6); border: 1px solid rgba(57,255,133,0.1); border-radius: 2px; padding: var(--sp-3) var(--sp-4); margin-top: var(--sp-3); font-family: var(--font-mono); font-size: var(--text-sm); color: var(--mint); position: relative; overflow-x: auto; }
-        .terminal-block::before { content: '$'; color: var(--mint-dim); margin-right: var(--sp-2); }
-        .copy-btn { position: absolute; top: var(--sp-2); right: var(--sp-2); font-family: var(--font-mono); font-size: var(--text-xs); background: rgba(57,255,133,0.08); border: 1px solid rgba(57,255,133,0.2); color: var(--mint-dim); padding: 2px 8px; border-radius: 2px; cursor: pointer; transition: all var(--duration-fast) var(--ease-out); text-transform: uppercase; letter-spacing: 1px; }
-        .copy-btn:hover { background: rgba(57,255,133,0.15); color: var(--mint); }
-
-        /* ═══ RULES ═══ */
-        .rules-list { list-style: none; max-width: 600px; margin: var(--sp-8) auto 0; }
-        .rules-list li { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text); padding: var(--sp-3) 0; border-bottom: 1px solid var(--gray-dark); display: flex; align-items: flex-start; gap: var(--sp-3); }
-        .rules-list li::before { content: '//'; color: var(--mint-dim); flex-shrink: 0; }
-        .rules-list li strong { color: var(--mint-bright); }
-
-        /* ═══ APPLY ═══ */
-        .apply-box { max-width: 500px; margin: 0 auto; text-align: center; padding: var(--sp-10); background: var(--black-card); border: 1px solid rgba(57,255,133,0.15); border-radius: 2px; }
-        .apply-box h3 { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--mint); margin-bottom: var(--sp-3); }
-        .apply-box p { font-size: var(--text-sm); color: var(--gray-light); margin-bottom: var(--sp-6); line-height: 1.7; }
-        .apply-box .btn { width: 100%; justify-content: center; }
-
-        /* ═══ FOOTER ═══ */
-        .footer { text-align: center; padding: var(--sp-12) var(--sp-8); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-mid); letter-spacing: 1px; }
-        .footer a { color: var(--mint-dim); text-decoration: none; border-bottom: 1px solid rgba(57,255,133,0.2); transition: color var(--duration-fast) var(--ease-out); }
-        .footer a:hover { color: var(--mint); }
-        .footer p + p { margin-top: var(--sp-2); }
-
+        /* ── Responsive ── */
         @media (max-width: 640px) {
-            .section { padding: var(--sp-16) var(--sp-4); }
-            .step-card { grid-template-columns: 1fr; gap: var(--sp-3); }
-            .seats-counter { gap: var(--sp-4); }
-            .btn-group { flex-direction: column; align-items: center; }
-            .hero-title { font-size: var(--text-2xl); }
-            .prize-table { font-size: var(--text-xs); }
-            .prize-table th, .prize-table td { padding: var(--sp-2) var(--sp-3); }
+            .transmission { padding: 0 16px; }
+            .readout-line { flex-direction: column; gap: 2px; }
+            .readout-key { min-width: auto; }
         }
     </style>
 </head>
-<body class="crt-flicker">
-    <div class="parallax-bg" aria-hidden="true"><div class="parallax-layer parallax-grid" data-speed="0.02"></div></div>
-    <canvas id="weapon-left" class="weapon-canvas weapon-canvas-left" aria-hidden="true"></canvas>
-    <canvas id="weapon-right" class="weapon-canvas weapon-canvas-right" aria-hidden="true"></canvas>
+<body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
 
-    <!-- ═══════════════ HERO ═══════════════ -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="terminal-prompt reveal">invite_only :: limited_seats</div>
-            <h1 class="hero-title reveal">7 Dwarves<br>Adventure Co.<span class="line-2">Competitive WoW · Real Stakes · Real Payouts</span></h1>
-            <p class="hero-tagline reveal">The LAN Party Renaissance.</p>
-            <p class="hero-desc reveal">Hundreds of players. A <strong>15-story tower on Market St, SF</strong>. Weekly raids. Quarterly expansions. Real prize pools. <strong>100 seats max</strong> — 80% of all revenue goes back to players. Your account is your asset. Welcome to the revival.</p>
-            <div class="btn-group reveal">
-                <a href="#apply" class="btn btn-primary">// apply_for_seat</a>
-                <a href="#lan" class="btn btn-ghost">// the_lan</a>
-            </div>
-            <div class="seats-counter stagger">
-                <div class="seat-block reveal"><div class="seat-val">100</div><div class="seat-lbl">Max Seats</div></div>
-                <div class="seat-block reveal"><div class="seat-val amber">$10</div><div class="seat-lbl">/Month</div></div>
-                <div class="seat-block reveal"><div class="seat-val">80%</div><div class="seat-lbl">Back to Players</div></div>
-                <div class="seat-block reveal"><div class="seat-val amber">LAN</div><div class="seat-lbl">Weekly Raids</div></div>
+    <!-- ASCII Weapons in margins -->
+    <canvas id="weapon-left" class="weapon-canvas weapon-left" aria-hidden="true"></canvas>
+    <canvas id="weapon-right" class="weapon-canvas weapon-right" aria-hidden="true"></canvas>
+
+    <div class="transmission">
+
+        <!-- ── Act I: The Call ── -->
+        <div class="breath"></div>
+
+        <div class="fade">
+            <div class="ascii-centerpiece">
+                <canvas id="hearthstone" aria-hidden="true"></canvas>
             </div>
         </div>
-        <div class="scroll-hint">scroll</div>
-    </section>
 
-    <!-- ═══════════════ BENTO: THE PARTY ═══════════════ -->
-    <div class="lava-divider lava-lg" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
+        <div class="gap"></div>
 
-    <div class="bento-section">
-        <div class="section-header reveal">
-            <div class="section-label">the.party</div>
-            <h2 class="section-title">The 7 Dwarves</h2>
-            <p class="section-desc">Click a dwarf to emote.</p>
+        <div class="fade">
+            <h1 class="title">7 Dwarves<br>Adventure Co.</h1>
         </div>
 
-        <div class="bento stagger">
-            <!-- Row 1 -->
-            <div class="bento-cell bento-portrait reveal" data-name="Grumli">
-                <div class="emote-bubble"></div>
-                <pre>
-      _.--._
-    .'  ##  '.
-   /  ######  \
-  |  ########  |
-  | |  o  o  | |
-  |  \  __  /  |
-   \  '----'  /
-    |  ||||  |
-   /|  ||||  |\
-  /_|________|_\
-  |  |_|  |_|  |
-  |  ========  |
-  | |  AXES  | |
-  |  \______/  |
-   \__________/
-                </pre>
-                <div class="portrait-label">Grumli<span>Warrior · Tank</span></div>
-            </div>
+        <div class="gap-sm"></div>
 
-            <div class="bento-cell bento-portrait reveal" data-name="Thordak">
-                <div class="emote-bubble"></div>
-                <pre>
-      .===.
-    .'  +  '.
-   / +  +  + \
-  |  +++++++  |
-  | |  o  o | |
-  |  \ __ /   |
-   \  '=='   /
-    | |  | |  |
-   /| [==] |  \
-  / |_|  |_|   \
-  |  ========   |
-  | | SHIELD |  |
-  |  \______/   |
-   \___________/
-                </pre>
-                <div class="portrait-label">Thordak<span>Paladin · Healer</span></div>
-            </div>
-
-            <div class="bento-cell bento-lava bento-tall reveal"><canvas class="lava-canvas"></canvas></div>
-
-            <div class="bento-cell bento-portrait reveal" data-name="Bofri">
-                <div class="emote-bubble"></div>
-                <pre>
-      _.-._
-    .'     '.
-   / ~ ~ ~ ~ \
-  |  ~~~~~~~  |
-  | |  o  o | |
-  |  \ .w. /  |
-   \  '---'  /
-    | /    \ |
-   /| |BEAR| |\
-  / |_|    |_| \
-  |  ========  |
-  | |  BOW   | |
-  |  \______/  |
-   \__________/
-                </pre>
-                <div class="portrait-label">Bofri<span>Hunter · DPS</span></div>
-            </div>
-
-            <!-- Row 2 -->
-            <div class="bento-cell bento-lava reveal"><canvas class="lava-canvas"></canvas></div>
-
-            <div class="bento-cell bento-portrait reveal" data-name="Snorri">
-                <div class="emote-bubble"></div>
-                <pre>
-      _..._
-    .'     '.
-   /  .....  \
-  |  .......  |
-  | |  -  - | |
-  |  \ _v_ /  |
-   \  '---'  /
-    | \    / |
-   /|  \  /  |\
-  / |___\/___| \
-  |  ========  |
-  | | DAGGERS| |
-  |  \______/  |
-   \__________/
-                </pre>
-                <div class="portrait-label">Snorri<span>Rogue · DPS</span></div>
-            </div>
-
-            <!-- lava-tall already placed -->
-
-            <div class="bento-cell bento-portrait reveal" data-name="Durin">
-                <div class="emote-bubble"></div>
-                <pre>
-      _/\_
-    .'    '.
-   /  ****  \
-  |  ******  |
-  | |  o  o | |
-  |  \ -- /  |
-   \  '=='  /
-    | |  | |  |
-   /| |()| |  \
-  / |_|  |_|   \
-  |  ========   |
-  | | STAFF  |  |
-  |  \______/   |
-   \___________/
-                </pre>
-                <div class="portrait-label">Durin<span>Priest · Healer</span></div>
-            </div>
-
-            <!-- Row 3 -->
-            <div class="bento-cell bento-portrait reveal" data-name="Kazrik">
-                <div class="emote-bubble"></div>
-                <pre>
-      _/~\_
-    .'  *  '.
-   / *  *  * \
-  |  *******  |
-  | |  o  o | |
-  |  \ ~~ /   |
-   \  '=='   /
-    | |  | |  |
-   /| |~~| |  \
-  / |_|  |_|   \
-  |  ========   |
-  | | WAND   |  |
-  |  \______/   |
-   \___________/
-                </pre>
-                <div class="portrait-label">Kazrik<span>Mage · DPS</span></div>
-            </div>
-
-            <div class="bento-cell bento-lava reveal"><canvas class="lava-canvas"></canvas></div>
-
-            <div class="bento-cell bento-portrait reveal" data-name="Morgrim">
-                <div class="emote-bubble"></div>
-                <pre>
-      _/X\_
-    .'XXXXX'.
-   / XXXXXXX \
-  |  XXXXXXX  |
-  | |  x  x | |
-  |  \ == /   |
-   \  '=='   /
-    | |  | |  |
-   /| |XX| |  \
-  / |_|  |_|   \
-  |  ========   |
-  | | RUNE   |  |
-  |  \______/   |
-   \___________/
-                </pre>
-                <div class="portrait-label">Morgrim<span>Death Knight · DPS</span></div>
-            </div>
-
-            <div class="bento-cell bento-lava reveal"><canvas class="lava-canvas"></canvas></div>
+        <div class="fade">
+            <p class="subtitle">The LAN Party Renaissance</p>
         </div>
+
+        <div class="breath-quarter"></div>
+
+        <!-- ── Act II: The Vision ── -->
+        <div class="fade">
+            <p class="big-text">
+                Remember when gaming meant <strong>showing up</strong>?
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <p class="big-text">
+                When you could hear the person you just killed.
+                When the room erupted after a boss kill.
+                When your guild was the people <strong>sitting next to you</strong>.
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <p class="big-text">
+                We're bringing it back.
+            </p>
+        </div>
+
+        <div class="breath-quarter"></div>
+
+        <div class="fade"><div class="horizon"><canvas class="lava-canvas"></canvas></div></div>
+
+        <div class="breath-quarter"></div>
+
+        <!-- ── Act III: The World ── -->
+        <div class="fade">
+            <p class="big-text">
+                <strong>1,000 players.</strong> One tower. Every weekend.<br>
+                <span class="dim">Market St, San Francisco.</span>
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <p class="prose">
+                A 15-story building on Market St becomes the largest recurring LAN party in the world. Dedicated raid floors. PvP arenas. Social lounges. A command center. <em>The kind of space that makes you forget the outside world exists.</em>
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <p class="prose">
+                Every weekend, the community descends on the tower for the weekly raid. Clear bosses, earn loot, get paid based on your performance. Arena tournaments with live spectating. Quarterly championships where legends are made.
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <p class="prose">
+                New content every three months. Some quarters bring classic WoW expansions. Others bring <strong>entirely custom content</strong> — original raids, dungeons, and storylines built just for this community.
+            </p>
+        </div>
+
+        <div class="breath-quarter"></div>
+
+        <div class="fade"><div class="horizon"><canvas class="lava-canvas"></canvas></div></div>
+
+        <div class="breath-quarter"></div>
+
+        <!-- ── Act IV: The Terms ── -->
+        <div class="fade">
+            <p class="big-text">
+                Your account is your <strong>asset</strong>.<br>
+                Your seat is your <strong>legacy</strong>.<br>
+                <span class="dim">100 seats. That's it.</span>
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade">
+            <div class="readout">
+                <div class="readout-line"><span class="readout-key">SUBSCRIPTION</span><span class="readout-val amber">$10/mo</span></div>
+                <div class="readout-line"><span class="readout-key">PLAYER PAYOUTS</span><span class="readout-val">80% of revenue</span></div>
+                <div class="readout-line"><span class="readout-key">FORMAT</span><span class="readout-val">WoW 3.3.5a (WotLK)</span></div>
+                <div class="readout-line"><span class="readout-key">RAIDS</span><span class="readout-val">Weekly</span></div>
+                <div class="readout-line"><span class="readout-key">PVP</span><span class="readout-val">Weekly + Quarterly</span></div>
+                <div class="readout-line"><span class="readout-key">EXPANSIONS</span><span class="readout-val">New content every 3 months</span></div>
+                <div class="readout-line"><span class="readout-key">SEATS</span><span class="readout-val">100 max, transferable</span></div>
+            </div>
+        </div>
+
+        <div class="breath-quarter"></div>
+
+        <div class="fade"><div class="horizon"><canvas class="lava-canvas"></canvas></div></div>
+
+        <div class="breath-quarter"></div>
+
+        <!-- ── Act V: The Threshold ── -->
+        <div class="fade">
+            <p class="big-text">
+                This is not a server.<br>
+                <strong>This is a calling.</strong>
+            </p>
+        </div>
+
+        <div class="gap"></div>
+
+        <div class="fade" style="text-align: center;">
+            <a href="mailto:apply@7dwarves.gg?subject=Seat%20Request" class="cta">Request a Seat</a>
+        </div>
+
+        <div class="breath-half"></div>
+
+        <!-- ── The Documentation (collapsed) ── -->
+        <div class="fade">
+            <a href="#" class="doc-link" data-doc="setup">client_setup</a>
+            <div class="doc-content" id="doc-setup">
+                <p>Download the WoW 3.3.5a client (~15 GB). Not the modern retail version.</p>
+                <p><a class="ghost" href="https://www.chromiecraft.com/en/downloads/" target="_blank">ChromieCraft</a> · <a class="ghost" href="https://www.warmane.com/download" target="_blank">Warmane</a></p>
+                <p>Open <code>Data/enUS/realmlist.wtf</code> and replace with:</p>
+                <div class="terminal"><button class="cp" onclick="navigator.clipboard.writeText('set realmlist 127.0.0.1').then(()=>{this.textContent='OK';setTimeout(()=>this.textContent='COPY',1500)})">COPY</button>set realmlist 127.0.0.1</div>
+                <p>Run <code>Wow.exe</code> (not the Launcher). Use the credentials you receive after approval.</p>
+                <p style="color: var(--amber-dim); font-size: 11px;">If the client is 100GB+, you have the wrong version.</p>
+            </div>
+
+            <a href="#" class="doc-link" data-doc="rules">the_rules</a>
+            <div class="doc-content" id="doc-rules">
+                <ul style="padding:0;">
+                    <li>One person, one account. No alts. No sharing.</li>
+                    <li>Accounts are transferable. Sell your seat at any agreed price.</li>
+                    <li>$10/month subscription. Keeps lights on and prize pools funded.</li>
+                    <li>LAN attendance optional, but that's where the community lives.</li>
+                    <li>No botting, no exploits. Compete with skill or don't compete.</li>
+                    <li>Invite only. Need a link or admin approval.</li>
+                    <li>Max 100 seats. Once gone, buy someone's account.</li>
+                </ul>
+            </div>
+
+            <a href="#" class="doc-link" data-doc="economy">the_economy</a>
+            <div class="doc-content" id="doc-economy">
+                <p>100 players × $10/mo = $1,000 monthly pool.</p>
+                <p>$800 goes to players. $200 covers infrastructure.</p>
+                <ul style="padding:0;">
+                    <li>Weekly PvE raid payouts based on Raid Output Score — $200</li>
+                    <li>Weekly PvP arena & BG rankings — $200</li>
+                    <li>Monthly season standings — $500</li>
+                    <li>Quarterly championship tournament — $1,500+</li>
+                </ul>
+                <p>Every healer, tank, and DPS gets their fair share, weighted by class and role.</p>
+            </div>
+        </div>
+
+        <div class="breath-quarter"></div>
+
+        <!-- ── Footer ── -->
+        <div class="fade footer">
+            <p>Powered by <a href="https://www.azerothcore.org/" target="_blank">AzerothCore</a> · WoW 3.3.5a</p>
+            <p>Invite only · 100 seats max</p>
+            <p style="margin-top: 16px;">// end_transmission</p>
+        </div>
+
+        <div class="gap"></div>
+
     </div>
 
-    <!-- ═══════════════ THE LAN ═══════════════ -->
-    <div class="lava-divider" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="lan">
-        <div class="section-header reveal">
-            <div class="section-label">the.main.event</div>
-            <h2 class="section-title">The LAN</h2>
-            <p class="section-desc">A 15-story tower on Market St, San Francisco. Hundreds of players. One raid. Every weekend. This is what gaming was supposed to be.</p>
-        </div>
-        <div class="how-grid stagger">
-            <div class="how-card reveal"><div class="how-num">// the venue</div><h3>Market St Tower, SF</h3><p>15 floors. Dedicated raid floors, PvP arenas, social lounges, and a command center. The kind of space that makes you forget the outside world exists.</p></div>
-            <div class="how-card reveal"><div class="how-num">// the raid</div><h3>Weekly PvE Raids</h3><p>Every weekend, the community descends on the tower for the weekly raid. Clear bosses, earn loot, and get paid based on your Raid Output Score — weighted by class and role.</p></div>
-            <div class="how-card reveal"><div class="how-num">// the pvp</div><h3>Live PvP Tournaments</h3><p>Arena brackets and battleground competitions with live spectating. Weekly, monthly, and quarterly prize pools. The quarterly championship is the Super Bowl of this community.</p></div>
-            <div class="how-card reveal"><div class="how-num">// the culture</div><h3>2000s LAN Renaissance</h3><p>Remember when gaming meant showing up? When you could hear the person you just killed? We're bringing that back. No Discord. No remote. Shoulder to shoulder.</p></div>
-        </div>
-    </section>
-
-    <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
-    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="how">
-        <div class="section-header reveal">
-            <div class="section-label">sys.protocol</div>
-            <h2 class="section-title">How It Works</h2>
-            <p class="section-desc">Prep during the week. Compete on the weekend. Get paid.</p>
-        </div>
-        <div class="how-grid stagger">
-            <div class="how-card reveal"><div class="how-num">// 01</div><h3>Spawn at 80, Geared</h3><p>Every player starts at max level with baseline raid gear. No leveling. You're here to compete from day one.</p></div>
-            <div class="how-card reveal"><div class="how-num">// 02</div><h3>Grind or Buy</h3><p>Run dungeons during the week to earn gold and gear. Or buy gold directly to skip the grind. Your call.</p></div>
-            <div class="how-card reveal"><div class="how-num">// 03</div><h3>Raid for Payouts</h3><p>Weekly PvE raids pay real money based on your Raid Output Score — DPS, healing, tanking, all weighted by class and role.</p></div>
-            <div class="how-card reveal"><div class="how-num">// 04</div><h3>PvP for Prizes</h3><p>Ranked arena and BG competitions with weekly, monthly, and quarterly prize pools.</p></div>
-            <div class="how-card reveal"><div class="how-num">// 05</div><h3>New Expansion Every Quarter</h3><p>Every 3 months, the world changes. Classic expansions or entirely custom content — original raids, dungeons, and storylines.</p></div>
-            <div class="how-card reveal"><div class="how-num">// 06</div><h3>Your Account = Your Asset</h3><p>One person, one account, forever. Sell your seat to another player at any time. 100 seats. That's it.</p></div>
-        </div>
-    </section>
-
-    <!-- ═══════════════ ECONOMY ═══════════════ -->
-    <div class="lava-divider" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="economy">
-        <div class="section-header reveal">
-            <div class="section-label">sys.economy</div>
-            <h2 class="section-title">The Numbers</h2>
-            <p class="section-desc">Transparent economics. 80% of every dollar goes back to the players who earn it.</p>
-        </div>
-        <div class="econ-grid stagger">
-            <div class="econ-card reveal"><div class="econ-val amber">$10</div><div class="econ-label">Monthly Sub</div><div class="econ-desc">Per player, per month</div></div>
-            <div class="econ-card reveal"><div class="econ-val">$1K</div><div class="econ-label">Max Monthly Pool</div><div class="econ-desc">100 players × $10</div></div>
-            <div class="econ-card reveal"><div class="econ-val">$800</div><div class="econ-label">Player Payouts</div><div class="econ-desc">PvE raids + PvP prizes</div></div>
-            <div class="econ-card reveal"><div class="econ-val">$200</div><div class="econ-label">Server + Venue</div><div class="econ-desc">Infrastructure & operations</div></div>
-        </div>
-        <div class="reveal" style="margin-top: var(--sp-12);">
-            <div class="section-header">
-                <div class="section-label">prize.distribution</div>
-                <h2 class="section-title" style="font-size: var(--text-lg);">How Players Earn</h2>
-            </div>
-            <table class="prize-table">
-                <thead><tr><th>Cadence</th><th>Format</th><th>Prize Pool</th></tr></thead>
-                <tbody>
-                    <tr><td>Weekly</td><td>PvE Raid Output Score</td><td>$200</td></tr>
-                    <tr><td>Weekly</td><td>PvP Arena & BG Rankings</td><td>$200</td></tr>
-                    <tr><td>Monthly</td><td>Season Standings (PvP + PvE)</td><td>$500</td></tr>
-                    <tr><td>Quarterly</td><td>Championship Tournament + New Expansion</td><td>$1,500+</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- ═══════════════ RULES ═══════════════ -->
-    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="rules">
-        <div class="section-header reveal">
-            <div class="section-label">sys.rules</div>
-            <h2 class="section-title">The Code</h2>
-            <p class="section-desc">Simple rules. No exceptions.</p>
-        </div>
-        <ul class="rules-list reveal">
-            <li><strong>One person, one account.</strong> No alts. No sharing. Your seat is yours alone.</li>
-            <li><strong>Accounts are transferable.</strong> You can sell your seat to another player at any agreed price.</li>
-            <li><strong>$10/month subscription.</strong> Keeps the lights on and the prize pools funded.</li>
-            <li><strong>LAN attendance is optional</strong> but that's where the real community lives.</li>
-            <li><strong>No botting, no exploits.</strong> Compete with skill or don't compete at all.</li>
-            <li><strong>Invite only.</strong> You need a link from an existing member or approval from the admins.</li>
-            <li><strong>Max 100 seats.</strong> Once they're gone, the only way in is buying someone's account.</li>
-        </ul>
-    </section>
-
-    <!-- ═══════════════ SETUP ═══════════════ -->
-    <div class="lava-divider" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="setup">
-        <div class="section-header reveal">
-            <div class="section-label">init.client</div>
-            <h2 class="section-title">Client Setup</h2>
-            <p class="section-desc">Once you're approved, here's how to connect.</p>
-        </div>
-        <div class="steps-list stagger">
-            <div class="step-card reveal"><div class="step-num">01</div><div class="step-body"><h3>Download WoW 3.3.5a</h3><p>Get the client (~15 GB). Not the modern retail version.</p><p style="margin-top:8px"><a href="https://www.chromiecraft.com/en/downloads/" target="_blank">ChromieCraft</a> · <a href="https://www.warmane.com/download" target="_blank">Warmane</a></p><p class="warning">100GB+ = wrong version. You want 3.3.5a (~15 GB).</p></div></div>
-            <div class="step-card reveal"><div class="step-num">02</div><div class="step-body"><h3>Set the Realmlist</h3><p>Open <code>Data/enUS/realmlist.wtf</code> and replace with:</p><div class="terminal-block"><button class="copy-btn" onclick="copyText(this, 'set realmlist 127.0.0.1')">copy</button>set realmlist 127.0.0.1</div></div></div>
-            <div class="step-card reveal"><div class="step-num">03</div><div class="step-body"><h3>Use Your Credentials</h3><p>You'll receive your account credentials after approval. Run <strong>Wow.exe</strong> (not the Launcher) and log in.</p></div></div>
-        </div>
-    </section>
-
-    <!-- ═══════════════ APPLY ═══════════════ -->
-    <div class="lava-divider lava-lg" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-
-    <section class="section" id="apply">
-        <div class="apply-box reveal">
-            <h3>Request a Seat</h3>
-            <p>Have an invite link? Use it below. Otherwise, apply and we'll review your request. Seats are limited and non-renewable once filled.</p>
-            <a href="mailto:apply@7dwarves.gg?subject=Seat%20Request" class="btn btn-primary" style="margin-bottom: var(--sp-3);">// apply_now</a>
-            <p style="font-size: var(--text-xs); color: var(--gray-mid); margin-top: var(--sp-4);">Have an invite code? Include it in your application.</p>
-        </div>
-    </section>
-
-    <!-- ═══════════════ FOOTER ═══════════════ -->
-    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
-    <footer class="footer">
-        <p>7 Dwarves Adventure Co. — Powered by <a href="https://www.azerothcore.org/" target="_blank">AzerothCore</a></p>
-        <p>WoW 3.3.5a · Invite Only · 100 seats max</p>
-        <p style="margin-top: 16px; color: var(--gray-dark);">// end_transmission</p>
-    </footer>
-
     <script>
-        // ── Reveal Observer ──
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
-        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        // ── Fade on scroll ──
+        const fades = document.querySelectorAll('.fade');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+        fades.forEach(f => obs.observe(f));
 
-        // ── Parallax ──
-        const parallaxLayers = document.querySelectorAll('[data-speed]');
-        let ticking = false;
-        window.addEventListener('scroll', () => {
-            if (!ticking) { requestAnimationFrame(() => { const s = window.scrollY; parallaxLayers.forEach(l => { l.style.transform = `translateY(${s * parseFloat(l.dataset.speed)}px)`; }); ticking = false; }); ticking = true; }
-        });
-
-        // ── Copy ──
-        function copyText(btn, text) {
-            navigator.clipboard.writeText(text).then(() => { const o = btn.textContent; btn.textContent = 'copied'; btn.style.color = 'var(--mint)'; setTimeout(() => { btn.textContent = o; btn.style.color = ''; }, 2000); });
-        }
-
-        // ── Smooth scroll ──
-        document.querySelectorAll('a[href^="#"]').forEach(a => {
-            a.addEventListener('click', function(e) { e.preventDefault(); const t = document.querySelector(this.getAttribute('href')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-        });
-
-        // ── Emote System ──
-        const emotes = [
-            { text: 'does a little dance.' }, { text: 'lets out a cheer!' }, { text: 'waves.' },
-            { text: 'flexes. Oooh so strong!' }, { text: 'laughs.' }, { text: 'roars with bestial vigor!' },
-            { text: 'salutes.' }, { text: 'cries.' }, { text: 'bows graciously.' },
-            { text: 'struts around clucking like a chicken.' }, { text: 'goes CHOO CHOO!' },
-        ];
-        document.querySelectorAll('.bento-portrait').forEach(cell => {
-            cell.addEventListener('click', function() {
-                const name = this.dataset.name;
-                const e = emotes[Math.floor(Math.random() * emotes.length)];
-                const bubble = this.querySelector('.emote-bubble');
-                bubble.textContent = `[${name}] ${e.text}`;
-                bubble.classList.add('show');
-                clearTimeout(this._et);
-                this._et = setTimeout(() => bubble.classList.remove('show'), 2500);
+        // ── Collapsible docs ──
+        document.querySelectorAll('.doc-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const id = 'doc-' + this.dataset.doc;
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('open');
             });
         });
 
-        // ── Lava ASCII Canvas System ──
+        // ── Lava horizon lines ──
         (function() {
             const canvases = document.querySelectorAll('.lava-canvas');
-            if (!canvases.length) return;
-            const chars = '░▒▓█▓▒░·.:·░▒▓██▓▒░';
+            const chars = '░▒▓█▓▒░';
             let t = 0;
 
-            function sizeAll() {
+            function size() {
                 canvases.forEach(c => {
-                    const p = c.parentElement;
-                    c.width = Math.min(1200, p.offsetWidth);
-                    c.height = p.offsetHeight || 100;
+                    c.width = Math.min(600, c.parentElement.offsetWidth);
+                    c.height = 20;
                 });
             }
-            sizeAll();
-            window.addEventListener('resize', sizeAll);
+            size();
+            window.addEventListener('resize', size);
 
             function draw() {
-                canvases.forEach((canvas, ci) => {
-                    const ctx = canvas.getContext('2d');
-                    const w = canvas.width, h = canvas.height;
-                    if (!w || !h) return;
+                canvases.forEach((c, ci) => {
+                    const ctx = c.getContext('2d');
+                    const w = c.width, h = c.height;
+                    if (!w) return;
                     ctx.fillStyle = '#0a0a0a';
                     ctx.fillRect(0, 0, w, h);
-                    ctx.font = '11px "Share Tech Mono", monospace';
-                    const off = ci * 100;
+                    ctx.font = '10px "Share Tech Mono", monospace';
+                    const off = ci * 50;
                     for (let x = 0; x < w; x += 7) {
-                        for (let y = 0; y < h; y += 13) {
-                            const nx = x * 0.015 + off, ny = y * 0.08;
-                            const noise = Math.sin(nx + t * 0.8) * Math.cos(ny + t * 0.5) + Math.sin(nx * 0.7 - t * 0.3) * 0.5 + Math.cos(ny * 2 + t * 1.2) * 0.3;
-                            const norm = (noise + 2) / 4;
-                            const idx = Math.floor(norm * chars.length) % chars.length;
-                            const alpha = norm * 0.35 + 0.02;
-                            const r = Math.floor(57 + norm * 180), g = Math.floor(255 - norm * 80), b = Math.floor(133 - norm * 100);
-                            ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
-                            ctx.fillText(chars[idx], x, y + 11);
-                        }
+                        const nx = x * 0.02 + off;
+                        const noise = Math.sin(nx + t * 0.6) * Math.cos(t * 0.3) + Math.sin(nx * 0.5 - t * 0.4) * 0.5;
+                        const norm = (noise + 1.5) / 3;
+                        const idx = Math.floor(norm * chars.length) % chars.length;
+                        const alpha = norm * 0.25 + 0.03;
+                        const r = Math.floor(57 + norm * 160);
+                        const g = Math.floor(255 - norm * 60);
+                        const b = Math.floor(133 - norm * 80);
+                        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+                        ctx.fillText(chars[idx], x, 14);
                     }
                 });
-                t += 0.015;
+                t += 0.012;
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // ── ASCII Hearthstone centerpiece ──
+        (function() {
+            const canvas = document.getElementById('hearthstone');
+            if (!canvas) return;
+            canvas.width = 400;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            const chars = ' .·:;░▒▓█';
+            let t = 0;
+
+            // Hearthstone shape: a spiral/swirl inside a rounded stone
+            function sdf(x, y) {
+                // Normalize to -1..1
+                const nx = (x / 400) * 2 - 1;
+                const ny = (y / 300) * 2 - 1;
+                // Outer stone shape (rounded rect)
+                const dx = Math.abs(nx) - 0.55;
+                const dy = Math.abs(ny) - 0.65;
+                const outer = Math.min(Math.max(dx, dy), 0) + Math.sqrt(Math.max(dx, 0)**2 + Math.max(dy, 0)**2) - 0.15;
+                // Inner spiral
+                const angle = Math.atan2(ny, nx);
+                const dist = Math.sqrt(nx*nx + ny*ny);
+                const spiral = Math.sin(angle * 3 + dist * 8 - t * 1.5) * 0.15;
+                // Combine
+                return outer + spiral * 0.3;
+            }
+
+            function draw() {
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, 400, 300);
+                ctx.font = '8px "Share Tech Mono", monospace';
+
+                for (let x = 0; x < 400; x += 6) {
+                    for (let y = 0; y < 300; y += 10) {
+                        const d = sdf(x, y);
+                        if (d < 0.1) {
+                            const intensity = Math.max(0, 1 - (d + 0.5));
+                            const pulse = Math.sin(t * 0.8) * 0.1 + 0.9;
+                            const val = intensity * pulse;
+                            const idx = Math.floor(val * (chars.length - 1));
+                            const alpha = val * 0.5 + 0.05;
+
+                            // Color: mint core, amber edges
+                            const edgeness = Math.max(0, d + 0.3) * 3;
+                            const r = Math.floor(57 + edgeness * 180);
+                            const g = Math.floor(255 - edgeness * 80);
+                            const b = Math.floor(133 - edgeness * 100);
+
+                            ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+                            ctx.fillText(chars[Math.min(idx, chars.length - 1)], x, y + 8);
+                        }
+                    }
+                }
+                t += 0.02;
                 requestAnimationFrame(draw);
             }
             draw();
         })();
     </script>
 
-    <!-- Three.js + ASCII Weapon Renderers -->
+    <!-- Three.js ASCII Weapons -->
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"}}</script>
     <script type="module">
         import * as THREE from 'three';
         import { AsciiEffect } from 'three/addons/effects/AsciiEffect.js';
+
         if (window.innerWidth < 800) throw new Error('skip');
+
         let scrollY = 0;
         window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
 
-        function createWeaponScene(canvasId, buildWeapon, mirror) {
+        function weapon(canvasId, build, mirror) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const w = canvas.offsetWidth, h = canvas.offsetHeight;
-            const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0a0a0a);
-            const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100); camera.position.set(0, 0, 5);
-            scene.add(new THREE.DirectionalLight(0x39ff85, 1.5).translateX(2).translateY(3).translateZ(4));
-            const l2 = new THREE.DirectionalLight(0x1a9e4e, 0.6); l2.position.set(-2, -1, 2); scene.add(l2);
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            const cam = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+            cam.position.set(0, 0, 5);
+
+            const d1 = new THREE.DirectionalLight(0x39ff85, 1.5);
+            d1.position.set(2, 3, 4); scene.add(d1);
+            const d2 = new THREE.DirectionalLight(0x1a9e4e, 0.6);
+            d2.position.set(-2, -1, 2); scene.add(d2);
             scene.add(new THREE.AmbientLight(0x39ff85, 0.15));
-            const weapon = buildWeapon(); scene.add(weapon);
-            const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: false }); renderer.setSize(w, h); renderer.setPixelRatio(1);
-            const effect = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: true, resolution: 0.15 }); effect.setSize(w, h);
-            Object.assign(effect.domElement.style, { color: '#39ff85', backgroundColor: '#0a0a0a', fontFamily: "'Share Tech Mono', monospace", fontSize: '6px', lineHeight: '6px', letterSpacing: '2px', position: 'fixed', top: '0', pointerEvents: 'none', zIndex: '1', overflow: 'hidden' });
-            effect.domElement.style[canvasId === 'weapon-left' ? 'left' : 'right'] = '20px';
-            effect.domElement.style.width = '200px';
-            canvas.style.display = 'none'; document.body.appendChild(effect.domElement);
-            const mq1200 = window.matchMedia('(max-width: 1200px)'), mq800 = window.matchMedia('(max-width: 800px)');
-            function upd() { if (mq800.matches) { effect.domElement.style.display = 'none'; } else if (mq1200.matches) { effect.domElement.style.display = 'block'; effect.domElement.style.opacity = '0.25'; effect.domElement.style.width = '120px'; } else { effect.domElement.style.display = 'block'; effect.domElement.style.opacity = '0.6'; effect.domElement.style.width = '200px'; } }
-            mq1200.addEventListener('change', upd); mq800.addEventListener('change', upd); upd();
+
+            const mesh = build(); scene.add(mesh);
+
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: false });
+            renderer.setSize(w, h); renderer.setPixelRatio(1);
+
+            const fx = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: true, resolution: 0.15 });
+            fx.setSize(w, h);
+            Object.assign(fx.domElement.style, {
+                color: '#39ff85', backgroundColor: '#0a0a0a',
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: '6px', lineHeight: '6px', letterSpacing: '2px',
+                position: 'fixed', top: '0', pointerEvents: 'none',
+                zIndex: '1', overflow: 'hidden'
+            });
+            fx.domElement.style[canvasId === 'weapon-left' ? 'left' : 'right'] = '20px';
+            fx.domElement.style.width = '200px';
+            canvas.style.display = 'none';
+            document.body.appendChild(fx.domElement);
+
+            const mq12 = window.matchMedia('(max-width: 1200px)');
+            const mq8 = window.matchMedia('(max-width: 800px)');
+            function upd() {
+                if (mq8.matches) fx.domElement.style.display = 'none';
+                else if (mq12.matches) { fx.domElement.style.display = 'block'; fx.domElement.style.opacity = '0.15'; fx.domElement.style.width = '120px'; }
+                else { fx.domElement.style.display = 'block'; fx.domElement.style.opacity = '0.4'; fx.domElement.style.width = '200px'; }
+            }
+            mq12.addEventListener('change', upd); mq8.addEventListener('change', upd); upd();
+
             const dir = mirror ? -1 : 1;
-            (function animate() { requestAnimationFrame(animate); const r = scrollY * 0.003 * dir; weapon.rotation.y = r; weapon.rotation.x = Math.sin(r * 0.5) * 0.3; weapon.position.y = Math.sin(Date.now() * 0.001) * 0.1; effect.render(scene, camera); })();
+            (function loop() {
+                requestAnimationFrame(loop);
+                const r = scrollY * 0.003 * dir;
+                mesh.rotation.y = r;
+                mesh.rotation.x = Math.sin(r * 0.5) * 0.3;
+                mesh.position.y = Math.sin(Date.now() * 0.001) * 0.1;
+                fx.render(scene, cam);
+            })();
         }
 
-        function buildThunderfury() {
+        function thunderfury() {
             const g = new THREE.Group();
             const m = new THREE.MeshPhongMaterial({ color: 0x39ff85, emissive: 0x0a3318, shininess: 80, flatShading: true });
-            const om = new THREE.MeshPhongMaterial({ color: 0x7affb2, emissive: 0x39ff85, emissiveIntensity: 0.5, shininess: 100 });
+            const o = new THREE.MeshPhongMaterial({ color: 0x7affb2, emissive: 0x39ff85, emissiveIntensity: 0.5, shininess: 100 });
             g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.15, 2.8, 6), m).translateY(0.8));
             g.add(new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.5, 6), m).translateY(2.45));
             g.add(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.15), m).translateY(-0.6));
             const wg = new THREE.ConeGeometry(0.08, 0.4, 4);
-            const wl = new THREE.Mesh(wg, m); wl.position.set(-0.7, -0.4, 0); wl.rotation.z = 0.5; g.add(wl);
-            const wr = new THREE.Mesh(wg, m); wr.position.set(0.7, -0.4, 0); wr.rotation.z = -0.5; g.add(wr);
-            g.add(new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), om).translateY(-0.6));
+            let wl = new THREE.Mesh(wg, m); wl.position.set(-0.7, -0.4, 0); wl.rotation.z = 0.5; g.add(wl);
+            let wr = new THREE.Mesh(wg, m); wr.position.set(0.7, -0.4, 0); wr.rotation.z = -0.5; g.add(wr);
+            g.add(new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), o).translateY(-0.6));
             g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6), new THREE.MeshPhongMaterial({ color: 0x1a9e4e, flatShading: true })).translateY(-1.0));
             g.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), m).translateY(-1.45));
-            for (let i = 0; i < 3; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.3 + i * 0.15, 0.015, 4, 12, Math.PI * 0.8), om); t.position.y = 0.5 + i * 0.6; t.rotation.z = i * 1.2; t.rotation.x = 0.3; g.add(t); }
-            g.scale.set(0.9, 0.9, 0.9); return g;
+            for (let i = 0; i < 3; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.3 + i * 0.15, 0.015, 4, 12, Math.PI * 0.8), o); t.position.y = 0.5 + i * 0.6; t.rotation.z = i * 1.2; t.rotation.x = 0.3; g.add(t); }
+            g.scale.setScalar(0.9); return g;
         }
 
-        function buildShadowmourne() {
+        function shadowmourne() {
             const g = new THREE.Group();
             const m = new THREE.MeshPhongMaterial({ color: 0x39ff85, emissive: 0x0a3318, shininess: 60, flatShading: true });
-            const sm = new THREE.MeshPhongMaterial({ color: 0x7affb2, emissive: 0x39ff85, emissiveIntensity: 0.4, flatShading: true });
+            const s = new THREE.MeshPhongMaterial({ color: 0x7affb2, emissive: 0x39ff85, emissiveIntensity: 0.4, flatShading: true });
             g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 3.2, 6), m));
-            const s = new THREE.Shape(); s.moveTo(0,0); s.quadraticCurveTo(0.8,0.3,0.9,0.8); s.quadraticCurveTo(0.85,1.2,0.4,1.4); s.lineTo(0,1.0);
-            const ag = new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 1 });
-            const al = new THREE.Mesh(ag, m); al.position.set(0.05, 0.6, -0.03); g.add(al);
-            const ar = new THREE.Mesh(ag, m); ar.position.set(-0.05, 0.6, -0.03); ar.scale.x = -1; g.add(ar);
-            const sk = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), sm); sk.position.y = 0.85; sk.scale.set(1, 1.2, 0.8); g.add(sk);
+            const sh = new THREE.Shape(); sh.moveTo(0,0); sh.quadraticCurveTo(0.8,0.3,0.9,0.8); sh.quadraticCurveTo(0.85,1.2,0.4,1.4); sh.lineTo(0,1.0);
+            const ag = new THREE.ExtrudeGeometry(sh, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 1 });
+            let al = new THREE.Mesh(ag, m); al.position.set(0.05, 0.6, -0.03); g.add(al);
+            let ar = new THREE.Mesh(ag, m); ar.position.set(-0.05, 0.6, -0.03); ar.scale.x = -1; g.add(ar);
+            const sk = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), s); sk.position.y = 0.85; sk.scale.set(1, 1.2, 0.8); g.add(sk);
             const em = new THREE.MeshPhongMaterial({ color: 0x0a0a0a, emissive: 0x39ff85, emissiveIntensity: 1.0 });
-            const el = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), em); el.position.set(-0.06, 0.9, 0.12); g.add(el);
-            const er = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), em); er.position.set(0.06, 0.9, 0.12); g.add(er);
-            const sp = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 6), m); sp.position.y = -1.75; sp.rotation.x = Math.PI; g.add(sp);
-            for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.015, 4, 8), sm); r.position.y = -0.3 - i * 0.35; r.rotation.x = Math.PI / 2; g.add(r); }
-            g.scale.set(0.85, 0.85, 0.85); return g;
+            let el = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), em); el.position.set(-0.06, 0.9, 0.12); g.add(el);
+            let er = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), em); er.position.set(0.06, 0.9, 0.12); g.add(er);
+            let sp = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 6), m); sp.position.y = -1.75; sp.rotation.x = Math.PI; g.add(sp);
+            for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.015, 4, 8), s); r.position.y = -0.3 - i * 0.35; r.rotation.x = Math.PI / 2; g.add(r); }
+            g.scale.setScalar(0.85); return g;
         }
 
-        try { createWeaponScene('weapon-left', buildThunderfury, false); createWeaponScene('weapon-right', buildShadowmourne, true); } catch(e) { console.log('3D weapons disabled:', e.message); }
+        try { weapon('weapon-left', thunderfury, false); weapon('weapon-right', shadowmourne, true); }
+        catch(e) { console.log('Weapons disabled:', e.message); }
     </script>
 </body>
 </html>
