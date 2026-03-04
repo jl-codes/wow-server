@@ -85,10 +85,27 @@
             background-size: 60px 60px;
         }
 
-        /* Ink illustrations */
-        .ink-illustration { position: absolute; opacity: 0.05; pointer-events: none; }
-        .ink-axe { top: 12%; right: 6%; width: 220px; height: 220px; }
-        .ink-shield { top: 55%; left: 4%; width: 180px; height: 180px; }
+        /* 3D Weapon Canvases */
+        .weapon-canvas {
+            position: fixed;
+            top: 0;
+            width: 200px;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.7;
+        }
+        .weapon-canvas-left { left: 20px; }
+        .weapon-canvas-right { right: 20px; }
+
+        @media (max-width: 1200px) {
+            .weapon-canvas { opacity: 0.3; width: 120px; }
+            .weapon-canvas-left { left: 5px; }
+            .weapon-canvas-right { right: 5px; }
+        }
+        @media (max-width: 800px) {
+            .weapon-canvas { display: none; }
+        }
 
         /* Reveal */
         .reveal {
@@ -427,15 +444,11 @@
 
     <div class="parallax-bg" aria-hidden="true">
         <div class="parallax-layer parallax-grid" data-speed="0.02"></div>
-        <svg class="ink-illustration ink-axe" viewBox="0 0 200 200" fill="none" data-speed="0.03">
-            <path d="M100 20 L120 80 L160 60 L140 100 L180 120 L120 120 L100 180 L80 120 L20 120 L60 100 L40 60 L80 80 Z" stroke="var(--mint)" stroke-width="1.5" fill="none"/>
-            <circle cx="100" cy="100" r="15" stroke="var(--mint)" stroke-width="1" fill="none"/>
-        </svg>
-        <svg class="ink-illustration ink-shield" viewBox="0 0 160 160" fill="none" data-speed="0.04">
-            <path d="M80 10 L140 40 L130 110 L80 150 L30 110 L20 40 Z" stroke="var(--mint)" stroke-width="1.5" fill="none"/>
-            <path d="M80 30 L120 50 L112 100 L80 125 L48 100 L40 50 Z" stroke="var(--mint)" stroke-width="0.8" fill="none" stroke-dasharray="3 2"/>
-        </svg>
     </div>
+
+    <!-- 3D Weapon Canvases -->
+    <canvas id="weapon-left" class="weapon-canvas weapon-canvas-left" aria-hidden="true"></canvas>
+    <canvas id="weapon-right" class="weapon-canvas weapon-canvas-right" aria-hidden="true"></canvas>
 
     <!-- ═══════════════ HERO ═══════════════ -->
     <section class="hero">
@@ -723,6 +736,296 @@
                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
+    </script>
+
+    <!-- Three.js + ASCII Weapon Renderers -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { AsciiEffect } from 'three/addons/effects/AsciiEffect.js';
+
+        // Skip on mobile / small screens
+        if (window.innerWidth < 800) throw new Error('skip');
+
+        let scrollY = 0;
+        window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+
+        function createWeaponScene(canvasId, buildWeapon, mirrorRotation) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+
+            // Scene
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+
+            // Camera
+            const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+            camera.position.set(0, 0, 5);
+
+            // Lighting — directional for sharp ASCII contrast
+            const light1 = new THREE.DirectionalLight(0x39ff85, 1.5);
+            light1.position.set(2, 3, 4);
+            scene.add(light1);
+
+            const light2 = new THREE.DirectionalLight(0x1a9e4e, 0.6);
+            light2.position.set(-2, -1, 2);
+            scene.add(light2);
+
+            const ambient = new THREE.AmbientLight(0x39ff85, 0.15);
+            scene.add(ambient);
+
+            // Build weapon mesh
+            const weapon = buildWeapon();
+            scene.add(weapon);
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: false });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(1); // Low res for ASCII feel
+
+            // ASCII Effect
+            const effect = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: true, resolution: 0.15 });
+            effect.setSize(w, h);
+            effect.domElement.style.color = '#39ff85';
+            effect.domElement.style.backgroundColor = '#0a0a0a';
+            effect.domElement.style.fontFamily = "'Share Tech Mono', monospace";
+            effect.domElement.style.fontSize = '6px';
+            effect.domElement.style.lineHeight = '6px';
+            effect.domElement.style.letterSpacing = '2px';
+            effect.domElement.style.position = 'fixed';
+            effect.domElement.style.top = '0';
+            effect.domElement.style.pointerEvents = 'none';
+            effect.domElement.style.zIndex = '1';
+            effect.domElement.style.overflow = 'hidden';
+
+            if (canvasId === 'weapon-left') {
+                effect.domElement.style.left = '20px';
+                effect.domElement.style.width = '200px';
+            } else {
+                effect.domElement.style.right = '20px';
+                effect.domElement.style.width = '200px';
+            }
+
+            // Hide the original canvas, show ASCII
+            canvas.style.display = 'none';
+            document.body.appendChild(effect.domElement);
+
+            // Match responsive styles
+            const mq1200 = window.matchMedia('(max-width: 1200px)');
+            const mq800 = window.matchMedia('(max-width: 800px)');
+
+            function updateResponsive() {
+                if (mq800.matches) {
+                    effect.domElement.style.display = 'none';
+                } else if (mq1200.matches) {
+                    effect.domElement.style.display = 'block';
+                    effect.domElement.style.opacity = '0.25';
+                    effect.domElement.style.width = '120px';
+                } else {
+                    effect.domElement.style.display = 'block';
+                    effect.domElement.style.opacity = '0.6';
+                    effect.domElement.style.width = '200px';
+                }
+            }
+            mq1200.addEventListener('change', updateResponsive);
+            mq800.addEventListener('change', updateResponsive);
+            updateResponsive();
+
+            // Animation loop
+            const dir = mirrorRotation ? -1 : 1;
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Scroll-driven rotation
+                const scrollRot = scrollY * 0.003 * dir;
+                weapon.rotation.y = scrollRot;
+                weapon.rotation.x = Math.sin(scrollRot * 0.5) * 0.3;
+                // Gentle idle float
+                weapon.position.y = Math.sin(Date.now() * 0.001) * 0.1;
+
+                effect.render(scene, camera);
+            }
+            animate();
+        }
+
+        // ── THUNDERFURY (Left) ──
+        // A legendary sword: long blade with crossguard and orb
+        function buildThunderfury() {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshPhongMaterial({
+                color: 0x39ff85,
+                emissive: 0x0a3318,
+                shininess: 80,
+                flatShading: true
+            });
+
+            // Blade — elongated octahedron
+            const bladeGeo = new THREE.CylinderGeometry(0.06, 0.15, 2.8, 6);
+            const blade = new THREE.Mesh(bladeGeo, mat);
+            blade.position.y = 0.8;
+            group.add(blade);
+
+            // Blade tip
+            const tipGeo = new THREE.ConeGeometry(0.06, 0.5, 6);
+            const tip = new THREE.Mesh(tipGeo, mat);
+            tip.position.y = 2.45;
+            group.add(tip);
+
+            // Crossguard — swept wings
+            const guardGeo = new THREE.BoxGeometry(1.4, 0.08, 0.15);
+            const guard = new THREE.Mesh(guardGeo, mat);
+            guard.position.y = -0.6;
+            group.add(guard);
+
+            // Guard wing tips (curved up)
+            const wingGeo = new THREE.ConeGeometry(0.08, 0.4, 4);
+            const wingL = new THREE.Mesh(wingGeo, mat);
+            wingL.position.set(-0.7, -0.4, 0);
+            wingL.rotation.z = 0.5;
+            group.add(wingL);
+
+            const wingR = new THREE.Mesh(wingGeo, mat);
+            wingR.position.set(0.7, -0.4, 0);
+            wingR.rotation.z = -0.5;
+            group.add(wingR);
+
+            // Orb at crossguard center
+            const orbGeo = new THREE.SphereGeometry(0.12, 8, 8);
+            const orbMat = new THREE.MeshPhongMaterial({
+                color: 0x7affb2,
+                emissive: 0x39ff85,
+                emissiveIntensity: 0.5,
+                shininess: 100
+            });
+            const orb = new THREE.Mesh(orbGeo, orbMat);
+            orb.position.y = -0.6;
+            group.add(orb);
+
+            // Handle
+            const handleGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6);
+            const handleMat = new THREE.MeshPhongMaterial({
+                color: 0x1a9e4e,
+                flatShading: true
+            });
+            const handle = new THREE.Mesh(handleGeo, handleMat);
+            handle.position.y = -1.0;
+            group.add(handle);
+
+            // Pommel
+            const pommelGeo = new THREE.SphereGeometry(0.1, 6, 6);
+            const pommel = new THREE.Mesh(pommelGeo, mat);
+            pommel.position.y = -1.45;
+            group.add(pommel);
+
+            // Lightning tendrils (decorative geometry)
+            for (let i = 0; i < 3; i++) {
+                const tendrilGeo = new THREE.TorusGeometry(0.3 + i * 0.15, 0.015, 4, 12, Math.PI * 0.8);
+                const tendril = new THREE.Mesh(tendrilGeo, orbMat);
+                tendril.position.y = 0.5 + i * 0.6;
+                tendril.rotation.z = i * 1.2;
+                tendril.rotation.x = 0.3;
+                group.add(tendril);
+            }
+
+            group.scale.set(0.9, 0.9, 0.9);
+            return group;
+        }
+
+        // ── SHADOWMOURNE (Right) ──
+        // A massive two-handed axe
+        function buildShadowmourne() {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshPhongMaterial({
+                color: 0x39ff85,
+                emissive: 0x0a3318,
+                shininess: 60,
+                flatShading: true
+            });
+
+            // Shaft
+            const shaftGeo = new THREE.CylinderGeometry(0.05, 0.07, 3.2, 6);
+            const shaft = new THREE.Mesh(shaftGeo, mat);
+            group.add(shaft);
+
+            // Axe head — left blade (large curved shape using lathe)
+            const axeShape = new THREE.Shape();
+            axeShape.moveTo(0, 0);
+            axeShape.quadraticCurveTo(0.8, 0.3, 0.9, 0.8);
+            axeShape.quadraticCurveTo(0.85, 1.2, 0.4, 1.4);
+            axeShape.lineTo(0, 1.0);
+            const axeExtrudeSettings = { depth: 0.06, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 1 };
+            const axeGeo = new THREE.ExtrudeGeometry(axeShape, axeExtrudeSettings);
+            const axeL = new THREE.Mesh(axeGeo, mat);
+            axeL.position.set(0.05, 0.6, -0.03);
+            group.add(axeL);
+
+            // Axe head — right blade (mirror)
+            const axeR = new THREE.Mesh(axeGeo, mat);
+            axeR.position.set(-0.05, 0.6, -0.03);
+            axeR.scale.x = -1;
+            group.add(axeR);
+
+            // Skull ornament at center
+            const skullGeo = new THREE.SphereGeometry(0.15, 6, 6);
+            const skullMat = new THREE.MeshPhongMaterial({
+                color: 0x7affb2,
+                emissive: 0x39ff85,
+                emissiveIntensity: 0.4,
+                flatShading: true
+            });
+            const skull = new THREE.Mesh(skullGeo, skullMat);
+            skull.position.y = 0.85;
+            skull.scale.set(1, 1.2, 0.8);
+            group.add(skull);
+
+            // Eye sockets
+            const eyeGeo = new THREE.SphereGeometry(0.04, 4, 4);
+            const eyeMat = new THREE.MeshPhongMaterial({ color: 0x0a0a0a, emissive: 0x39ff85, emissiveIntensity: 1.0 });
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.06, 0.9, 0.12);
+            group.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.06, 0.9, 0.12);
+            group.add(eyeR);
+
+            // Pommel spike
+            const spikeGeo = new THREE.ConeGeometry(0.1, 0.3, 6);
+            const spike = new THREE.Mesh(spikeGeo, mat);
+            spike.position.y = -1.75;
+            spike.rotation.x = Math.PI;
+            group.add(spike);
+
+            // Rune rings on shaft
+            for (let i = 0; i < 4; i++) {
+                const ringGeo = new THREE.TorusGeometry(0.09, 0.015, 4, 8);
+                const ring = new THREE.Mesh(ringGeo, skullMat);
+                ring.position.y = -0.3 - i * 0.35;
+                ring.rotation.x = Math.PI / 2;
+                group.add(ring);
+            }
+
+            group.scale.set(0.85, 0.85, 0.85);
+            return group;
+        }
+
+        // Initialize both weapons
+        try {
+            createWeaponScene('weapon-left', buildThunderfury, false);
+            createWeaponScene('weapon-right', buildShadowmourne, true);
+        } catch(e) {
+            // Graceful fallback — no weapons on unsupported browsers
+            console.log('3D weapons disabled:', e.message);
+        }
     </script>
 </body>
 </html>
