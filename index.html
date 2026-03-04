@@ -293,29 +293,9 @@
             height: 420px;
         }
         .ascii-centerpiece canvas {
-            position: absolute;
-            top: 0; left: 0;
             width: 100%;
             height: 100%;
-            display: none; /* hidden — used as render source */
-        }
-        .ascii-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .ascii-overlay pre {
-            font-family: var(--font);
-            font-size: 8px;
-            line-height: 9.2px;
-            letter-spacing: 1px;
-            color: var(--mint);
-            text-shadow: 0 0 8px rgba(57,255,133,0.15);
-            text-align: center;
+            display: block;
         }
 
         /* ── Footer ── */
@@ -355,8 +335,7 @@
 
         <div class="fade">
             <div class="ascii-centerpiece">
-                <canvas id="hero-3d" aria-hidden="true"></canvas>
-                <div id="hero-ascii" class="ascii-overlay"></div>
+                <canvas id="hero-canvas" aria-hidden="true"></canvas>
             </div>
         </div>
 
@@ -601,112 +580,77 @@
             draw();
         })();
 
-        // ── Hero: 3D Hearthstone → Custom ASCII Pipeline ──
-        // Render 3D scene to hidden canvas, read pixels, convert to ASCII with transparency
+        // ── Hero: Hearthstone ASCII — Pure Canvas Renderer ──
+        // SDF shape → brightness → ASCII chars drawn directly on canvas (no DOM)
         (function() {
-            const canvas = document.getElementById('hero-3d');
-            const overlay = document.getElementById('hero-ascii');
-            if (!canvas || !overlay) return;
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
 
-            // Render at low res for performance (each pixel → one ASCII char)
-            const COLS = 80;
-            const ROWS = 46;
-
-            // Offscreen canvas for SDF rendering
-            const readCanvas = document.createElement('canvas');
-            readCanvas.width = COLS;
-            readCanvas.height = ROWS;
-            const readCtx = readCanvas.getContext('2d');
-
-            const chars = ' .·:░▒▓█';
+            const W = 560, H = 420;
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+            const chars = ' .·:;░▒▓█';
+            const CW = 7, CH = 11; // char cell size
+            const COLS = Math.floor(W / CW);
+            const ROWS = Math.floor(H / CH);
             let t = 0;
-            let lastFrame = 0;
 
-            // Create pre element for output
-            const pre = document.createElement('pre');
-            overlay.appendChild(pre);
+            function draw() {
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, W, H);
+                ctx.font = '10px "Share Tech Mono", monospace';
+                ctx.textBaseline = 'top';
 
-            function draw(now) {
-                requestAnimationFrame(draw);
-                // Throttle to ~20fps for performance
-                if (now - lastFrame < 50) return;
-                lastFrame = now;
+                for (let row = 0; row < ROWS; row++) {
+                    for (let col = 0; col < COLS; col++) {
+                        // Normalize to -1..1
+                        const nx = (col / COLS) * 2 - 1;
+                        const ny = (row / ROWS) * 2 - 1;
 
-                // Draw the hearthstone shape to the read canvas
-                readCtx.fillStyle = '#000';
-                readCtx.fillRect(0, 0, COLS, ROWS);
-
-                // Hearthstone: rounded rect with swirling spiral inside
-                for (let y = 0; y < ROWS; y++) {
-                    for (let x = 0; x < COLS; x++) {
-                        const nx = (x / COLS) * 2 - 1;
-                        const ny = (y / ROWS) * 2 - 1;
-
-                        // Outer stone shape
+                        // Outer hearthstone shape (rounded rect)
                         const dx = Math.abs(nx) - 0.5;
                         const dy = Math.abs(ny) - 0.6;
-                        const outer = Math.min(Math.max(dx, dy), 0) + Math.sqrt(Math.max(dx, 0)**2 + Math.max(dy, 0)**2) - 0.18;
+                        const outer = Math.min(Math.max(dx, dy), 0) +
+                            Math.sqrt(Math.max(dx, 0)**2 + Math.max(dy, 0)**2) - 0.18;
 
-                        if (outer < 0.08) {
-                            // Inside the stone
-                            const angle = Math.atan2(ny, nx);
-                            const dist = Math.sqrt(nx*nx + ny*ny);
+                        if (outer >= 0.08) continue; // outside shape
 
-                            // Swirling hearthstone spiral
-                            const spiral = Math.sin(angle * 4 + dist * 10 - t * 2) * 0.5 + 0.5;
-                            // Pulsing glow from center
-                            const glow = Math.max(0, 1 - dist * 1.5) * (Math.sin(t * 1.2) * 0.15 + 0.85);
-                            // Edge highlight
-                            const edge = Math.max(0, 1 - Math.abs(outer) * 15);
+                        const angle = Math.atan2(ny, nx);
+                        const dist = Math.sqrt(nx*nx + ny*ny);
 
-                            const brightness = Math.min(1, spiral * 0.4 + glow * 0.5 + edge * 0.3);
+                        // Swirling hearthstone spiral
+                        const spiral = Math.sin(angle * 4 + dist * 10 - t * 2) * 0.5 + 0.5;
+                        // Pulsing glow from center
+                        const glow = Math.max(0, 1 - dist * 1.5) * (Math.sin(t * 1.2) * 0.15 + 0.85);
+                        // Edge highlight
+                        const edge = Math.max(0, 1 - Math.abs(outer) * 15);
+                        // Portal ring
+                        const ring = Math.exp(-Math.pow((dist - 0.55) * 8, 2)) * 0.4;
 
-                            if (brightness > 0.05) {
-                                const v = Math.floor(brightness * 255);
-                                readCtx.fillStyle = `rgb(${v},${v},${v})`;
-                                readCtx.fillRect(x, y, 1, 1);
-                            }
-                        }
+                        const brightness = Math.min(1, spiral * 0.35 + glow * 0.45 + edge * 0.25 + ring);
+
+                        if (brightness < 0.04) continue;
+
+                        const ci = Math.floor(brightness * (chars.length - 1));
+                        const ch = chars[Math.min(ci, chars.length - 1)];
+
+                        // Color: mint core → amber edges
+                        const mint = Math.max(0, 1 - dist * 1.3);
+                        const r = Math.floor(57 + (1 - mint) * 198);
+                        const g = Math.floor(255 - (1 - mint) * 85);
+                        const b = Math.floor(133 - (1 - mint) * 133);
+                        const a = brightness * 0.75 + 0.08;
+
+                        ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+                        ctx.fillText(ch, col * CW, row * CH);
                     }
                 }
 
-                // Read pixels and convert to ASCII
-                const imageData = readCtx.getImageData(0, 0, COLS, ROWS);
-                const pixels = imageData.data;
-                let html = '';
-
-                for (let y = 0; y < ROWS; y++) {
-                    for (let x = 0; x < COLS; x++) {
-                        const i = (y * COLS + x) * 4;
-                        const brightness = pixels[i] / 255; // grayscale
-
-                        if (brightness < 0.03) {
-                            html += ' '; // transparent — just a space
-                        } else {
-                            const ci = Math.floor(brightness * (chars.length - 1));
-                            const ch = chars[Math.min(ci, chars.length - 1)];
-
-                            // Color: mint at center, amber at edges
-                            const nx = (x / COLS) * 2 - 1;
-                            const ny = (y / ROWS) * 2 - 1;
-                            const dist = Math.sqrt(nx*nx + ny*ny);
-                            const mint = Math.max(0, 1 - dist * 1.2);
-
-                            const r = Math.floor(57 + (1 - mint) * 198);
-                            const g = Math.floor(255 - (1 - mint) * 85);
-                            const b = Math.floor(133 - (1 - mint) * 133);
-                            const a = (brightness * 0.7 + 0.1).toFixed(2);
-
-                            html += `<span style="color:rgba(${r},${g},${b},${a})">${ch}</span>`;
-                        }
-                    }
-                    html += '\n';
-                }
-
-                pre.innerHTML = html;
-                t += 0.025;
+                t += 0.02;
+                requestAnimationFrame(draw);
             }
-            requestAnimationFrame(draw);
+            draw();
         })();
     </script>
 
