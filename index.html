@@ -297,23 +297,33 @@
         }
         .doc-content .terminal .cp:hover { color: var(--mint-dim); }
 
-        /* ── ASCII art centerpiece ── */
-        .ascii-centerpiece {
-            width: 100%;
-            max-width: 560px;
-            margin: 0 auto;
-            text-align: center;
+        /* ── Hero Section ── */
+        .hero-section {
             position: relative;
-            height: 420px;
-        }
-        .ascii-centerpiece video {
-            display: none; /* hidden source — frames read by canvas */
-        }
-        .ascii-centerpiece canvas {
             width: 100%;
-            height: 100%;
-            display: block;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        .hero-section video { display: none; }
+        .hero-section canvas {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            object-fit: contain;
+        }
+        .hero-text {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        .hero-text.show { opacity: 1; }
 
         /* ── Footer ── */
         .footer {
@@ -347,26 +357,15 @@
 
     <div class="transmission">
 
-        <!-- ── Act I: The Call ── -->
-        <div class="breath"></div>
-
-        <div class="fade">
-            <div class="ascii-centerpiece">
-                <video id="hero-video" src="hero.mp4" autoplay loop muted playsinline preload="auto" crossorigin="anonymous"></video>
-                <canvas id="hero-canvas" aria-hidden="true"></canvas>
+        <!-- ── Act I: The Call — video bg + text overlay ── -->
+        <div class="hero-section" id="hero-section">
+            <video id="hero-video" src="hero.mp4" muted playsinline preload="auto"></video>
+            <canvas id="hero-canvas" aria-hidden="true"></canvas>
+            <div class="hero-text" id="hero-text">
+                <h1 class="title">7 Dwarves<br>Adventure Co.</h1>
+                <div class="gap-sm"></div>
+                <p class="subtitle">The LAN Party Renaissance</p>
             </div>
-        </div>
-
-        <div class="gap"></div>
-
-        <div class="fade">
-            <h1 class="title">7 Dwarves<br>Adventure Co.</h1>
-        </div>
-
-        <div class="gap-sm"></div>
-
-        <div class="fade">
-            <p class="subtitle">The LAN Party Renaissance</p>
         </div>
 
         <div class="breath-quarter"></div>
@@ -598,77 +597,144 @@
             draw();
         })();
 
-        // ── Hero: Video → ASCII Pipeline ──
-        // Read video frames, sample brightness, render as ASCII chars on canvas
+        // ── Hero: Video → Bayer 8x8 Dithered ASCII Pipeline ──
         (function() {
             const video = document.getElementById('hero-video');
             const canvas = document.getElementById('hero-canvas');
+            const heroText = document.getElementById('hero-text');
             if (!video || !canvas) return;
 
-            const W = 560, H = 420;
+            const W = 600, H = 600;
             canvas.width = W;
             canvas.height = H;
             const ctx = canvas.getContext('2d');
 
-            // Offscreen canvas to sample video frames
+            // Bayer 8x8 ordered dithering matrix (normalized 0-1)
+            const BAYER8 = [
+                [ 0, 32,  8, 40,  2, 34, 10, 42],
+                [48, 16, 56, 24, 50, 18, 58, 26],
+                [12, 44,  4, 36, 14, 46,  6, 38],
+                [60, 28, 52, 20, 62, 30, 54, 22],
+                [ 3, 35, 11, 43,  1, 33,  9, 41],
+                [51, 19, 59, 27, 49, 17, 57, 25],
+                [15, 47,  7, 39, 13, 45,  5, 37],
+                [63, 31, 55, 23, 61, 29, 53, 21]
+            ].map(row => row.map(v => v / 64));
+
+            // Sample at higher res for finer dithering
+            const COLS = 120, ROWS = 60;
             const sample = document.createElement('canvas');
-            const COLS = 80, ROWS = 38;
             sample.width = COLS;
             sample.height = ROWS;
             const sCtx = sample.getContext('2d', { willReadFrequently: true });
 
-            const chars = ' .·:;░▒▓█';
-            const CW = W / COLS;
-            const CH = H / ROWS;
+            // 2x2 block characters for dithering output
+            // Each 2x2 block of sampled pixels → one character
+            const BLOCK_COLS = Math.floor(COLS / 2);
+            const BLOCK_ROWS = Math.floor(ROWS / 2);
+            const CW = W / BLOCK_COLS;
+            const CH = H / BLOCK_ROWS;
 
-            function draw() {
-                requestAnimationFrame(draw);
+            // Characters ordered by visual density (for 2x2 block mapping)
+            const chars = ' .·:░▒▓█';
 
-                // Clear
+            let videoEnded = false;
+            let animId = null;
+
+            function renderFrame() {
                 ctx.fillStyle = '#0a0a0a';
                 ctx.fillRect(0, 0, W, H);
 
-                // Sample video frame at low res
-                if (video.readyState < 2) return; // not ready yet
-                sCtx.drawImage(video, 0, 0, COLS, ROWS);
+                if (video.readyState < 2) return;
+
+                // Draw video preserving aspect ratio (center-crop/fit)
+                const vw = video.videoWidth || 1;
+                const vh = video.videoHeight || 1;
+                const vAspect = vw / vh;
+                const sAspect = COLS / ROWS;
+                let sx = 0, sy = 0, sw = vw, sh = vh;
+                if (vAspect > sAspect) {
+                    sw = vh * sAspect;
+                    sx = (vw - sw) / 2;
+                } else {
+                    sh = vw / sAspect;
+                    sy = (vh - sh) / 2;
+                }
+                sCtx.drawImage(video, sx, sy, sw, sh, 0, 0, COLS, ROWS);
                 const frame = sCtx.getImageData(0, 0, COLS, ROWS);
                 const px = frame.data;
 
-                ctx.font = '10px "Geist Mono", monospace';
+                ctx.font = Math.round(CH) + 'px "Geist Mono", monospace';
                 ctx.textBaseline = 'top';
 
-                for (let row = 0; row < ROWS; row++) {
-                    for (let col = 0; col < COLS; col++) {
-                        const i = (row * COLS + col) * 4;
-                        // Grayscale brightness from RGB
-                        const brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
+                for (let by = 0; by < BLOCK_ROWS; by++) {
+                    for (let bx = 0; bx < BLOCK_COLS; bx++) {
+                        // Sample 2x2 block of pixels
+                        let totalBright = 0;
+                        let totalR = 0, totalG = 0, totalB = 0;
+                        let maxBright = 0;
 
-                        // Skip dark pixels (transparent — the black background)
-                        if (brightness < 0.06) continue;
+                        for (let dy = 0; dy < 2; dy++) {
+                            for (let dx = 0; dx < 2; dx++) {
+                                const px_x = bx * 2 + dx;
+                                const px_y = by * 2 + dy;
+                                const i = (px_y * COLS + px_x) * 4;
+                                const bright = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
+                                totalBright += bright;
+                                totalR += px[i]; totalG += px[i+1]; totalB += px[i+2];
+                                if (bright > maxBright) maxBright = bright;
+                            }
+                        }
 
-                        const ci = Math.floor(brightness * (chars.length - 1));
+                        const avgBright = totalBright / 4;
+
+                        // Skip dark blocks (black bg = transparent)
+                        if (avgBright < 0.04) continue;
+
+                        // Bayer 8x8 dithering threshold
+                        const bayer = BAYER8[by % 8][bx % 8];
+                        const dithered = avgBright + (bayer - 0.5) * 0.3;
+                        const clamped = Math.max(0, Math.min(1, dithered));
+
+                        if (clamped < 0.05) continue;
+
+                        const ci = Math.floor(clamped * (chars.length - 1));
                         const ch = chars[Math.min(ci, chars.length - 1)];
 
-                        // Color: mint for bright areas, amber for mid, dim for edges
-                        const r = Math.floor(57 + (1 - brightness) * 198);
-                        const g = Math.floor(255 - (1 - brightness) * 85);
-                        const b = Math.floor(133 - (1 - brightness) * 133);
-                        const a = brightness * 0.8 + 0.1;
+                        // Color: mint for bright, amber for dim
+                        const mint = clamped;
+                        const r = Math.floor(57 + (1 - mint) * 198);
+                        const g = Math.floor(255 - (1 - mint) * 85);
+                        const b = Math.floor(133 - (1 - mint) * 133);
+                        const a = clamped * 0.85 + 0.1;
 
                         ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-                        ctx.fillText(ch, col * CW, row * CH);
+                        ctx.fillText(ch, bx * CW, by * CH);
                     }
                 }
             }
 
-            // Force play and start rendering
+            function draw() {
+                renderFrame();
+                if (!videoEnded) {
+                    animId = requestAnimationFrame(draw);
+                }
+            }
+
+            // Video ends → show text overlay, keep last frame
+            video.addEventListener('ended', () => {
+                videoEnded = true;
+                renderFrame(); // render final frame
+                if (heroText) heroText.classList.add('show');
+            });
+
+            // Start
             function startVideo() {
                 video.play().catch(() => {
-                    // Autoplay blocked — start on first user interaction
                     document.addEventListener('click', () => video.play(), { once: true });
                     document.addEventListener('scroll', () => video.play(), { once: true });
                 });
-                requestAnimationFrame(draw);
+                animId = requestAnimationFrame(draw);
             }
             video.addEventListener('loadeddata', startVideo);
             if (video.readyState >= 2) startVideo();
