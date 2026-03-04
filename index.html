@@ -385,16 +385,22 @@
         }
         .promo-content {
             position: absolute;
-            inset: 45px;
+            inset: 0;
             z-index: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            background: var(--black);
-            padding: 16px;
+            padding: 24px;
             overflow: hidden;
+        }
+        .promo-mount {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 20px rgba(138,255,180,0.3));
         }
         .promo-badge {
             font-family: var(--font-mono);
@@ -642,17 +648,18 @@
                 <div class="promo-border"><img src="frame.gif" alt="" loading="lazy"></div>
                 <div class="promo-content">
                     <div class="promo-badge">Founding Supporter Exclusive</div>
+                    <img src="alar-mount.png" alt="Ashes of Al'ar — Matrix Edition" class="promo-mount">
                     <div class="promo-title">Ashes of Al'ar<br>Matrix Edition</div>
-                    <p class="promo-desc">
-                        A custom phoenix mount in the signature dithered style. <em>Only for founding supporters.</em> Never sold again once 100 seats fill.
-                    </p>
                     <div class="promo-price">
                         <span class="amount">$100</span>
                         <span class="label">ONE-TIME · LIFETIME</span>
                     </div>
-                    <p class="promo-note">Ships to your account on day one.</p>
                 </div>
             </div>
+            <div class="gap-sm"></div>
+            <p class="prose" style="text-align: center; margin: 0 auto;">
+                A custom phoenix mount in the signature dithered style. <em>Only for founding supporters.</em> Never sold again once 100 seats fill. Ships to your account on day one.
+            </p>
         </div>
 
         <div class="breath-quarter"></div>
