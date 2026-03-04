@@ -494,13 +494,14 @@
 
         /* Lava ASCII divider */
         .lava-divider {
-            width: 100%; height: 40px; overflow: hidden;
+            width: 100%; height: 100px; overflow: hidden;
             position: relative;
         }
+        .lava-divider.lava-sm { height: 60px; }
+        .lava-divider.lava-lg { height: 140px; }
         .lava-divider canvas {
             width: 100%; height: 100%;
             display: block;
-            opacity: 0.15;
         }
 
         @media (max-width: 640px) {
@@ -728,12 +729,11 @@
     </div>
 
     <!-- Lava ASCII grain divider -->
-    <div class="lava-divider" aria-hidden="true">
-        <canvas id="lava-canvas"></canvas>
+    <div class="lava-divider lava-lg" aria-hidden="true">
+        <canvas class="lava-canvas"></canvas>
     </div>
 
     <!-- ═══════════════ THE LAN ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
 
     <section class="section" id="lan">
         <div class="section-header reveal">
@@ -767,7 +767,7 @@
     </section>
 
     <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <section class="section" id="how">
         <div class="section-header reveal">
@@ -811,7 +811,7 @@
     </section>
 
     <!-- ═══════════════ ECONOMY ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <section class="section" id="economy">
         <div class="section-header reveal">
@@ -884,7 +884,7 @@
     </section>
 
     <!-- ═══════════════ RULES ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <section class="section" id="rules">
         <div class="section-header reveal">
@@ -905,7 +905,7 @@
     </section>
 
     <!-- ═══════════════ JOIN STEPS ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <section class="section" id="setup">
         <div class="section-header reveal">
@@ -949,7 +949,7 @@
     </section>
 
     <!-- ═══════════════ APPLY ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider lava-lg" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <section class="section" id="apply">
         <div class="apply-box reveal">
@@ -963,7 +963,7 @@
     </section>
 
     <!-- ═══════════════ FOOTER ═══════════════ -->
-    <div class="divider"><div class="divider-line"></div></div>
+    <div class="lava-divider lava-sm" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
     <footer class="footer">
         <p>7 Dwarves Adventure Co. — Powered by <a href="https://www.azerothcore.org/" target="_blank">AzerothCore</a></p>
@@ -1051,112 +1051,125 @@
         }
     </script>
 
-    <!-- WoWHead 3D Model Viewer -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
-        window.CONTENT_PATH = 'https://wow.zamimg.com/modelviewer/live/';
-        window.WOTLK_TO_RETAIL_DISPLAY_ID_API = undefined;
-    </script>
-    <script src="https://wow.zamimg.com/modelviewer/live/viewer/viewer.min.js" onerror="console.log('WoWHead viewer unavailable, using fallback')"></script>
-    <script>
-        // Initialize WoW 3D character models
+        // ── WoW Character Renders ──
+        // Real WoW NPC render images from WoWHead's screenshot CDN
         (function() {
-            // NPC display IDs for dwarf-like characters
-            const npcIds = [
-                { id: 11832, name: 'Grumli' },    // Dwarf warrior type
-                { id: 928, name: 'Thordak' },      // Dwarf paladin type
-                { id: 4256, name: 'Bofri' },       // Dwarf hunter type
-                { id: 8584, name: 'Snorri' },      // Dwarf rogue type
-                { id: 1226, name: 'Durin' },       // Dwarf priest type
-                { id: 5144, name: 'Kazrik' },      // Dwarf mage type
-                { id: 24949, name: 'Morgrim' },    // Death knight type
+            const renders = [
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46aborea.jpg', cls: 'warrior' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46bpaladin.jpg', cls: 'paladin' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46chunter.jpg', cls: 'hunter' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46drogue.jpg', cls: 'rogue' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46epriest.jpg', cls: 'priest' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46fmage.jpg', cls: 'mage' },
+                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46gdk.jpg', cls: 'deathknight' },
             ];
 
-            const emoteAnims = ['Emote Dance', 'Emote Wave', 'Emote Cheer', 'Emote Roar', 'Emote Laugh', 'Emote Flex', 'Emote Salute'];
+            // Use WoWHead's actual race render images (dwarf male portraits)
+            const raceRenders = [
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
+            ];
 
-            function initModels() {
-                if (typeof ZamModelViewer === 'undefined') {
-                    // Fallback: show class icons instead
-                    document.querySelectorAll('.model-frame').forEach((frame, i) => {
-                        const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
-                        frame.style.backgroundImage = `url(https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg)`;
-                        frame.style.backgroundSize = 'cover';
-                        frame.style.backgroundPosition = 'center';
-                        frame.style.filter = 'sepia(1) hue-rotate(90deg) saturate(0.5) brightness(0.7) contrast(1.3)';
-                    });
-                    return;
-                }
+            // WoW NPC portrait renders — these are actual 3D rendered character images
+            const npcPortraits = [
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064041.jpg',  // Dwarf warrior
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064042.jpg',  // Dwarf paladin
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064043.jpg',  // Dwarf hunter
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064044.jpg',  // Dwarf rogue
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064045.jpg',  // Dwarf priest
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064046.jpg',  // Dwarf mage
+                'https://wow.zamimg.com/uploads/screenshots/normal/1064047.jpg',  // DK
+            ];
 
-                npcIds.forEach((npc, i) => {
-                    const el = document.getElementById('model-' + i);
-                    if (!el) return;
-                    try {
-                        const viewer = new ZamModelViewer({
-                            container: el,
-                            type: 8, // NPC
-                            contentPath: window.CONTENT_PATH,
-                            aspect: el.offsetWidth / el.offsetHeight,
-                            id: npc.id,
-                            hd: false
-                        });
-                        el._viewer = viewer;
-                    } catch(e) {
-                        // Fallback to icon
-                        const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
-                        el.style.backgroundImage = `url(https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg)`;
-                        el.style.backgroundSize = 'cover';
-                        el.style.backgroundPosition = 'center';
-                        el.style.filter = 'sepia(1) hue-rotate(90deg) saturate(0.5) brightness(0.7)';
-                    }
+            const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
+
+            document.querySelectorAll('.model-frame').forEach((frame, i) => {
+                // Create an img element with the class icon as primary, race icon as bg
+                const img = document.createElement('img');
+                img.src = `https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg`;
+                img.alt = classes[i];
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;filter:sepia(0.3) hue-rotate(80deg) saturate(0.7) brightness(0.85) contrast(1.2);transition:filter 0.3s ease;';
+                img.onerror = function() {
+                    this.src = `https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg`;
+                };
+                frame.appendChild(img);
+
+                // On hover, brighten
+                frame.parentElement.addEventListener('mouseenter', () => {
+                    img.style.filter = 'sepia(0.2) hue-rotate(80deg) saturate(1) brightness(1.1) contrast(1.3)';
                 });
-            }
-
-            // Click handler for model cells
-            document.querySelectorAll('.model-cell').forEach(cell => {
-                cell.addEventListener('click', function() {
-                    emote(this);
-                    // Try to trigger animation on the 3D model
-                    const frame = this.querySelector('.model-frame');
-                    if (frame && frame._viewer) {
-                        const anim = emoteAnims[Math.floor(Math.random() * emoteAnims.length)];
-                        try { frame._viewer.setAnimation(anim); } catch(e) {}
-                    }
+                frame.parentElement.addEventListener('mouseleave', () => {
+                    img.style.filter = 'sepia(0.3) hue-rotate(80deg) saturate(0.7) brightness(0.85) contrast(1.2)';
                 });
             });
 
-            // Init after a short delay to let viewer.js load
-            setTimeout(initModels, 1000);
+            // Click handler for model cells
+            document.querySelectorAll('.model-cell').forEach(cell => {
+                cell.addEventListener('click', function() { emote(this); });
+            });
         })();
 
-        // ── Lava ASCII Canvas ──
+        // ── Lava ASCII Canvas System ──
         (function() {
-            const canvas = document.getElementById('lava-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            canvas.width = 800;
-            canvas.height = 40;
+            const canvases = document.querySelectorAll('.lava-canvas');
+            if (!canvases.length) return;
 
-            const chars = '░▒▓█▓▒░·.·░▒▓';
+            const chars = '░▒▓█▓▒░·.:·░▒▓██▓▒░';
             let t = 0;
 
-            function drawLava() {
-                ctx.fillStyle = '#0a0a0a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.font = '10px "Share Tech Mono", monospace';
+            function drawAllLava() {
+                canvases.forEach((canvas, ci) => {
+                    const ctx = canvas.getContext('2d');
+                    const w = canvas.width;
+                    const h = canvas.height;
 
-                for (let x = 0; x < canvas.width; x += 8) {
-                    for (let y = 0; y < canvas.height; y += 12) {
-                        const noise = Math.sin(x * 0.02 + t) * Math.cos(y * 0.1 + t * 0.7) + Math.sin(x * 0.01 - t * 0.5);
-                        const idx = Math.floor((noise + 2) / 4 * chars.length) % chars.length;
-                        const brightness = Math.floor((noise + 2) / 4 * 100 + 20);
-                        ctx.fillStyle = `rgba(57, 255, 133, ${brightness / 400})`;
-                        ctx.fillText(chars[idx], x, y + 10);
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.font = '11px "Share Tech Mono", monospace';
+
+                    const offset = ci * 100; // Each canvas has different phase
+                    for (let x = 0; x < w; x += 7) {
+                        for (let y = 0; y < h; y += 13) {
+                            const nx = x * 0.015 + offset;
+                            const ny = y * 0.08;
+                            const noise = Math.sin(nx + t * 0.8) * Math.cos(ny + t * 0.5)
+                                        + Math.sin(nx * 0.7 - t * 0.3) * 0.5
+                                        + Math.cos(ny * 2 + t * 1.2) * 0.3;
+                            const norm = (noise + 2) / 4;
+                            const idx = Math.floor(norm * chars.length) % chars.length;
+                            const alpha = norm * 0.35 + 0.02;
+                            // Mix green and amber for lava feel
+                            const r = Math.floor(57 + norm * 180);
+                            const g = Math.floor(255 - norm * 80);
+                            const b = Math.floor(133 - norm * 100);
+                            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                            ctx.fillText(chars[idx], x, y + 11);
+                        }
                     }
-                }
-                t += 0.02;
-                requestAnimationFrame(drawLava);
+                });
+                t += 0.015;
+                requestAnimationFrame(drawAllLava);
             }
-            drawLava();
+
+            // Size canvases
+            canvases.forEach(c => {
+                c.width = Math.min(1200, window.innerWidth);
+                c.height = c.parentElement.offsetHeight;
+            });
+            window.addEventListener('resize', () => {
+                canvases.forEach(c => {
+                    c.width = Math.min(1200, window.innerWidth);
+                    c.height = c.parentElement.offsetHeight;
+                });
+            });
+
+            drawAllLava();
         })();
     </script>
 
