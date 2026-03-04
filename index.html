@@ -428,6 +428,105 @@
         .footer a:hover { color: var(--mint); }
         .footer p + p { margin-top: var(--sp-2); }
 
+        /* ═══ DWARF PARTY ═══ */
+        .dwarf-party {
+            display: flex; justify-content: center; align-items: flex-end;
+            gap: var(--sp-3); padding: var(--sp-8) var(--sp-4);
+            max-width: 700px; margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .dwarf {
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; position: relative;
+            transition: transform var(--duration-fast) var(--ease-spring);
+        }
+        .dwarf:hover { transform: translateY(-4px); }
+        .dwarf:active { transform: translateY(0); }
+
+        .dwarf-icon {
+            width: 56px; height: 56px; border-radius: 4px;
+            border: 2px solid var(--gray-dark);
+            background: var(--black-card);
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color var(--duration-fast) var(--ease-out),
+                        box-shadow var(--duration-fast) var(--ease-out);
+            overflow: hidden; position: relative;
+        }
+        .dwarf:hover .dwarf-icon {
+            border-color: var(--mint-dim);
+            box-shadow: 0 0 12px rgba(57,255,133,0.15);
+        }
+        .dwarf-icon img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: sepia(1) hue-rotate(90deg) saturate(0.6) brightness(0.8);
+            transition: filter var(--duration-fast) var(--ease-out);
+        }
+        .dwarf:hover .dwarf-icon img {
+            filter: sepia(1) hue-rotate(90deg) saturate(1) brightness(1);
+        }
+
+        .dwarf-name {
+            font-family: var(--font-mono); font-size: 7px;
+            color: var(--gray-mid); margin-top: var(--sp-1);
+            letter-spacing: 1px; text-transform: uppercase;
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+        .dwarf:hover .dwarf-name { color: var(--mint-dim); }
+
+        .dwarf-class {
+            font-family: var(--font-mono); font-size: 6px;
+            color: var(--gray-dark); letter-spacing: 1px;
+        }
+
+        /* Emote bubble */
+        .emote-bubble {
+            position: absolute; bottom: 100%; left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            font-family: var(--font-mono); font-size: var(--text-xs);
+            color: var(--amber); white-space: nowrap;
+            padding: var(--sp-1) var(--sp-2);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,170,0,0.2);
+            border-radius: 2px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .emote-bubble.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-12px);
+        }
+
+        /* Emote animation on dwarf */
+        @keyframes emote-bounce {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-8px) rotate(-5deg); }
+            50% { transform: translateY(-4px); }
+            75% { transform: translateY(-6px) rotate(5deg); }
+        }
+        .dwarf.emoting {
+            animation: emote-bounce 0.6s var(--ease-spring);
+        }
+
+        /* WoW class icon dividers */
+        .class-divider {
+            display: flex; justify-content: center; align-items: center;
+            gap: var(--sp-4); padding: var(--sp-4) 0;
+        }
+        .class-divider-icon {
+            width: 20px; height: 20px; opacity: 0.12;
+            filter: sepia(1) hue-rotate(90deg) saturate(0.5) brightness(1.2);
+            transition: opacity var(--duration-fast) var(--ease-out),
+                        transform var(--duration-fast) var(--ease-spring);
+        }
+        .class-divider-icon:hover {
+            opacity: 0.4;
+            transform: rotate(8deg) scale(1.1);
+        }
+        .class-divider-line {
+            flex: 1; max-width: 120px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(57,255,133,0.1), transparent);
+        }
+
         /* ═══ RESPONSIVE ═══ */
         @media (max-width: 640px) {
             .section { padding: var(--sp-16) var(--sp-4); }
@@ -465,7 +564,7 @@
             <p class="hero-desc reveal">
                 Hundreds of players. A <strong>15-story tower on Market St, SF</strong>.
                 Weekly raids. Quarterly expansions. Real prize pools.
-                <strong>1,000 seats max</strong> — 80% of all revenue goes back to players.
+                <strong>100 seats max</strong> — 80% of all revenue goes back to players.
                 Your account is your asset. Welcome to the revival.
             </p>
 
@@ -476,7 +575,7 @@
 
             <div class="seats-counter stagger">
                 <div class="seat-block reveal">
-                    <div class="seat-val">1,000</div>
+                    <div class="seat-val">100</div>
                     <div class="seat-lbl">Max Seats</div>
                 </div>
                 <div class="seat-block reveal">
@@ -495,6 +594,53 @@
         </div>
         <div class="scroll-hint">scroll</div>
     </section>
+
+    <!-- ═══════════════ THE 7 DWARVES ═══════════════ -->
+    <div class="dwarf-party reveal" id="dwarves">
+        <div class="dwarf" data-name="Grumli" data-class="Warrior" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt="Warrior"></div>
+            <div class="dwarf-name">Grumli</div>
+            <div class="dwarf-class">Warrior</div>
+        </div>
+        <div class="dwarf" data-name="Thordak" data-class="Paladin" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_paladin.jpg" alt="Paladin"></div>
+            <div class="dwarf-name">Thordak</div>
+            <div class="dwarf-class">Paladin</div>
+        </div>
+        <div class="dwarf" data-name="Bofri" data-class="Hunter" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg" alt="Hunter"></div>
+            <div class="dwarf-name">Bofri</div>
+            <div class="dwarf-class">Hunter</div>
+        </div>
+        <div class="dwarf" data-name="Snorri" data-class="Rogue" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_rogue.jpg" alt="Rogue"></div>
+            <div class="dwarf-name">Snorri</div>
+            <div class="dwarf-class">Rogue</div>
+        </div>
+        <div class="dwarf" data-name="Durin" data-class="Priest" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg" alt="Priest"></div>
+            <div class="dwarf-name">Durin</div>
+            <div class="dwarf-class">Priest</div>
+        </div>
+        <div class="dwarf" data-name="Kazrik" data-class="Mage" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg" alt="Mage"></div>
+            <div class="dwarf-name">Kazrik</div>
+            <div class="dwarf-class">Mage</div>
+        </div>
+        <div class="dwarf" data-name="Morgrim" data-class="Death Knight" onclick="emote(this)">
+            <div class="emote-bubble"></div>
+            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_deathknight.jpg" alt="Death Knight"></div>
+            <div class="dwarf-name">Morgrim</div>
+            <div class="dwarf-class">Death Knight</div>
+        </div>
+    </div>
+    <p style="text-align:center; font-family: var(--font-mono); font-size: 9px; color: var(--gray-dark); letter-spacing: 2px; margin-bottom: var(--sp-8);">CLICK A DWARF</p>
 
     <!-- ═══════════════ THE LAN ═══════════════ -->
     <div class="divider"><div class="divider-line"></div></div>
@@ -569,7 +715,7 @@
             <div class="how-card reveal">
                 <div class="how-num">// 06</div>
                 <h3>Your Account = Your Asset</h3>
-                <p>One person, one account, forever. Sell your seat to another player at any time. As the community grows, so does your account's value. 1,000 seats. That's it.</p>
+                <p>One person, one account, forever. Sell your seat to another player at any time. As the community grows, so does your account's value. 100 seats. That's it.</p>
             </div>
         </div>
     </section>
@@ -591,17 +737,17 @@
                 <div class="econ-desc">Per player, per month</div>
             </div>
             <div class="econ-card reveal">
-                <div class="econ-val">$10K</div>
+                <div class="econ-val">$1K</div>
                 <div class="econ-label">Max Monthly Pool</div>
-                <div class="econ-desc">1,000 players × $10</div>
+                <div class="econ-desc">100 players × $10</div>
             </div>
             <div class="econ-card reveal">
-                <div class="econ-val">$8K</div>
+                <div class="econ-val">$800</div>
                 <div class="econ-label">Player Payouts</div>
                 <div class="econ-desc">PvE raids + PvP prizes</div>
             </div>
             <div class="econ-card reveal">
-                <div class="econ-val">$2K</div>
+                <div class="econ-val">$200</div>
                 <div class="econ-label">Server + Venue</div>
                 <div class="econ-desc">Infrastructure & operations</div>
             </div>
@@ -625,22 +771,22 @@
                     <tr>
                         <td>Weekly</td>
                         <td>PvE Raid Output Score</td>
-                        <td>$1,000</td>
+                        <td>$200</td>
                     </tr>
                     <tr>
                         <td>Weekly</td>
                         <td>PvP Arena & BG Rankings</td>
-                        <td>$1,000</td>
+                        <td>$200</td>
                     </tr>
                     <tr>
                         <td>Monthly</td>
                         <td>Season Standings (PvP + PvE)</td>
-                        <td>$3,000</td>
+                        <td>$500</td>
                     </tr>
                     <tr>
                         <td>Quarterly</td>
                         <td>Championship Tournament + New Expansion Launch</td>
-                        <td>$8,000+</td>
+                        <td>$1,500+</td>
                     </tr>
                 </tbody>
             </table>
@@ -664,7 +810,7 @@
             <li><strong>LAN attendance is optional</strong> but that's where the real community lives.</li>
             <li><strong>No botting, no exploits.</strong> Compete with skill or don't compete at all.</li>
             <li><strong>Invite only.</strong> You need a link from an existing member or approval from the admins.</li>
-            <li><strong>Max 1,000 seats.</strong> Once they're gone, the only way in is buying someone's account.</li>
+            <li><strong>Max 100 seats.</strong> Once they're gone, the only way in is buying someone's account.</li>
         </ul>
     </section>
 
@@ -731,7 +877,7 @@
 
     <footer class="footer">
         <p>7 Dwarves Adventure Co. — Powered by <a href="https://www.azerothcore.org/" target="_blank">AzerothCore</a></p>
-        <p>WoW 3.3.5a · Invite Only · 1,000 Seats Max</p>
+        <p>WoW 3.3.5a · Invite Only · 100 seats max</p>
         <p style="margin-top: 16px; color: var(--gray-dark);">// end_transmission</p>
     </footer>
 
@@ -776,6 +922,43 @@
                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
+
+        // ── Dwarf Emote System ──
+        const emotes = [
+            { verb: 'dances', text: 'does a little dance.' },
+            { verb: 'cheers', text: 'lets out a cheer!' },
+            { verb: 'waves', text: 'waves.' },
+            { verb: 'flexes', text: 'flexes. Oooh so strong!' },
+            { verb: 'laughs', text: 'laughs.' },
+            { verb: 'roars', text: 'roars with bestial vigor!' },
+            { verb: 'salutes', text: 'salutes.' },
+            { verb: 'cries', text: 'cries.' },
+            { verb: 'bows', text: 'bows graciously.' },
+            { verb: 'chicken', text: 'struts around clucking like a chicken.' },
+            { verb: 'train', text: 'goes CHOO CHOO!' },
+        ];
+
+        function emote(el) {
+            const name = el.dataset.name;
+            const e = emotes[Math.floor(Math.random() * emotes.length)];
+            const bubble = el.querySelector('.emote-bubble');
+
+            // Show emote text
+            bubble.textContent = `[${name}] ${e.text}`;
+            bubble.classList.add('show');
+
+            // Bounce animation
+            el.classList.remove('emoting');
+            void el.offsetWidth; // reflow
+            el.classList.add('emoting');
+
+            // Hide after delay
+            clearTimeout(el._emoteTimer);
+            el._emoteTimer = setTimeout(() => {
+                bubble.classList.remove('show');
+                el.classList.remove('emoting');
+            }, 2500);
+        }
     </script>
 
     <!-- Three.js + ASCII Weapon Renderers -->
