@@ -43,9 +43,9 @@
     <style>
         :root {
             /* ── Lighter green palette ── */
-            --mint: #6aff9e;
-            --mint-dim: #3dcc6e;
-            --mint-ghost: rgba(106, 255, 158, 0.08);
+            --mint: #8affb4;
+            --mint-dim: #55dd88;
+            --mint-ghost: rgba(138, 255, 180, 0.08);
             --amber: #ffbb33;
             --amber-dim: rgba(255, 187, 51, 0.6);
             --black: #0a0a0a;
@@ -102,8 +102,8 @@
         .bg-grid {
             position: fixed; inset: 0; z-index: -1;
             background-image:
-                linear-gradient(rgba(106,255,158,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(106,255,158,0.015) 1px, transparent 1px);
+                linear-gradient(rgba(138,255,180,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138,255,180,0.015) 1px, transparent 1px);
             background-size: 80px 80px;
         }
 
@@ -157,7 +157,7 @@
             line-height: 1.1;
             letter-spacing: -1px;
             font-weight: 600;
-            text-shadow: 0 0 30px rgba(106,255,158,0.25), 0 0 60px rgba(106,255,158,0.1);
+            text-shadow: 0 0 30px rgba(138,255,180,0.3), 0 0 60px rgba(138,255,180,0.12);
         }
 
         .subtitle {
@@ -190,7 +190,7 @@
         .big-text strong {
             color: var(--mint);
             font-weight: 400;
-            text-shadow: 0 0 10px rgba(106,255,158,0.2);
+            text-shadow: 0 0 10px rgba(138,255,180,0.25);
         }
 
         .dim { color: var(--gray-text); }
@@ -246,10 +246,10 @@
             text-decoration: none;
             cursor: pointer;
             transition: box-shadow 0.3s ease, transform 0.15s ease;
-            box-shadow: 0 0 20px rgba(106,255,158,0.15);
+            box-shadow: 0 0 20px rgba(138,255,180,0.2);
         }
         .cta:hover {
-            box-shadow: 0 0 40px rgba(106,255,158,0.3), 0 0 80px rgba(106,255,158,0.1);
+            box-shadow: 0 0 40px rgba(138,255,180,0.35), 0 0 80px rgba(138,255,180,0.12);
             transform: translateY(-1px);
         }
         .cta:active { transform: translateY(0); }
@@ -507,7 +507,7 @@
 
         <div class="gap"></div>
 
-        <div class="fade" style="text-align: center;">
+        <div class="fade">
             <a href="apply.html" class="cta">Request a Seat</a>
         </div>
 
@@ -613,9 +613,9 @@
                         const norm = (noise + 1.5) / 3;
                         const idx = Math.floor(norm * chars.length) % chars.length;
                         const alpha = norm * 0.25 + 0.03;
-                        const r = Math.floor(106 + norm * 120);
-                        const g = Math.floor(255 - norm * 40);
-                        const b = Math.floor(158 - norm * 80);
+                        const r = Math.floor(138 + norm * 100);
+                        const g = Math.floor(255 - norm * 25);
+                        const b = Math.floor(180 - norm * 70);
                         ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
                         ctx.fillText(chars[idx], x, 14);
                     }
@@ -694,23 +694,25 @@
                 for (let y = 0; y < ROWS; y++) {
                     for (let x = 0; x < COLS; x++) {
                         const i = (y * COLS + x) * 4;
-                        const brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
+                        let brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
 
                         // Skip black background
                         if (brightness < 0.03) continue;
+
+                        // Gamma boost — brighter midtones for glow
+                        brightness = Math.pow(brightness, 0.55);
 
                         // Bayer 8x8 threshold
                         const threshold = BAYER8[y % 8][x % 8];
 
                         // Dithered: pixel is ON if brightness > threshold
                         if (brightness > threshold) {
-                            // Color: mint, with brightness-based alpha
-                            const alpha = Math.min(255, Math.floor((brightness * 0.8 + 0.2) * 255));
-                            // Slight color shift: brighter = more mint, dimmer = more amber
+                            // Color: lighter mint, with brightness-based alpha
+                            const alpha = Math.min(255, Math.floor((brightness * 0.85 + 0.15) * 255));
                             const mint = brightness;
-                            const r = Math.floor(106 + (1 - mint) * 140);
-                            const g = Math.floor(255 - (1 - mint) * 50);
-                            const b = Math.floor(158 - (1 - mint) * 100);
+                            const r = Math.floor(138 + (1 - mint) * 100);
+                            const g = Math.floor(255 - (1 - mint) * 30);
+                            const b = Math.floor(180 - (1 - mint) * 80);
 
                             // Fill the DOTxDOT block
                             for (let dy = 0; dy < DOT; dy++) {
@@ -759,41 +761,46 @@
         })();
     </script>
 
-    <!-- Three.js ASCII Weapons -->
+    <!-- Three.js Dithered Weapons -->
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"}}</script>
     <script type="module">
         import * as THREE from 'three';
-        import { AsciiEffect } from 'three/addons/effects/AsciiEffect.js';
 
         if (window.innerWidth < 800) throw new Error('skip');
+
+        // Shared Bayer 8x8 matrix
+        const BAYER8 = [
+            [ 0, 32,  8, 40,  2, 34, 10, 42],
+            [48, 16, 56, 24, 50, 18, 58, 26],
+            [12, 44,  4, 36, 14, 46,  6, 38],
+            [60, 28, 52, 20, 62, 30, 54, 22],
+            [ 3, 35, 11, 43,  1, 33,  9, 41],
+            [51, 19, 59, 27, 49, 17, 57, 25],
+            [15, 47,  7, 39, 13, 45,  5, 37],
+            [63, 31, 55, 23, 61, 29, 53, 21]
+        ].map(row => row.map(v => v / 64));
+
+        const GAMMA = 0.55; // < 1 = brighter midtones (glow boost)
+        const DOT = 3;
 
         let scrollY = 0;
         window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
 
-        // Build a single sword model — used on both sides
         function buildSword() {
             const g = new THREE.Group();
-            const blade = new THREE.MeshPhongMaterial({ color: 0x6aff9e, emissive: 0x1a4428, shininess: 80, flatShading: true });
-            const glow = new THREE.MeshPhongMaterial({ color: 0x9affbe, emissive: 0x6aff9e, emissiveIntensity: 0.5, shininess: 100 });
-            const grip = new THREE.MeshPhongMaterial({ color: 0x3dcc6e, flatShading: true });
+            const blade = new THREE.MeshPhongMaterial({ color: 0x8affb4, emissive: 0x224a30, shininess: 80, flatShading: true });
+            const glow = new THREE.MeshPhongMaterial({ color: 0xb0ffd0, emissive: 0x8affb4, emissiveIntensity: 0.6, shininess: 100 });
+            const grip = new THREE.MeshPhongMaterial({ color: 0x55dd88, flatShading: true });
 
-            // Blade
             g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 2.8, 6), blade).translateY(0.8));
-            // Tip
             g.add(new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.5, 6), blade).translateY(2.45));
-            // Crossguard
             g.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.12), blade).translateY(-0.6));
-            // Crossguard tips
             const wg = new THREE.ConeGeometry(0.07, 0.35, 4);
             let wl = new THREE.Mesh(wg, blade); wl.position.set(-0.6, -0.4, 0); wl.rotation.z = 0.5; g.add(wl);
             let wr = new THREE.Mesh(wg, blade); wr.position.set(0.6, -0.4, 0); wr.rotation.z = -0.5; g.add(wr);
-            // Gem
             g.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), glow).translateY(-0.6));
-            // Handle
             g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6), grip).translateY(-1.0));
-            // Pommel
             g.add(new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), blade).translateY(-1.45));
-            // Energy rings along blade
             for (let i = 0; i < 3; i++) {
                 const t = new THREE.Mesh(new THREE.TorusGeometry(0.25 + i * 0.12, 0.012, 4, 12, Math.PI * 0.8), glow);
                 t.position.y = 0.5 + i * 0.6; t.rotation.z = i * 1.2; t.rotation.x = 0.3; g.add(t);
@@ -803,60 +810,91 @@
         }
 
         function weapon(canvasId, mirror) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const w = canvas.offsetWidth, h = canvas.offsetHeight;
+            const outCanvas = document.getElementById(canvasId);
+            if (!outCanvas) return;
+            const w = outCanvas.offsetWidth, h = outCanvas.offsetHeight;
 
+            // Three.js renders to offscreen canvas
+            const glCanvas = document.createElement('canvas');
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0a0a);
             const cam = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
             cam.position.set(0, 0, 5);
 
-            const d1 = new THREE.DirectionalLight(0x6aff9e, 1.5);
+            const d1 = new THREE.DirectionalLight(0x8affb4, 1.8);
             d1.position.set(2, 3, 4); scene.add(d1);
-            const d2 = new THREE.DirectionalLight(0x3dcc6e, 0.6);
+            const d2 = new THREE.DirectionalLight(0x55dd88, 0.8);
             d2.position.set(-2, -1, 2); scene.add(d2);
-            scene.add(new THREE.AmbientLight(0x6aff9e, 0.15));
+            scene.add(new THREE.AmbientLight(0x8affb4, 0.2));
 
             const mesh = buildSword();
-            // Mirror the right sword so they're symmetrical
             if (mirror) mesh.scale.x *= -1;
             scene.add(mesh);
 
-            const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: false });
+            const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: false, antialias: false });
             renderer.setSize(w, h); renderer.setPixelRatio(1);
 
-            const fx = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: true, resolution: 0.15 });
-            fx.setSize(w, h);
-            Object.assign(fx.domElement.style, {
-                color: '#6aff9e', backgroundColor: 'transparent',
-                fontFamily: "'Geist Mono', monospace",
-                fontSize: '6px', lineHeight: '6px', letterSpacing: '2px',
-                position: 'fixed', top: '0', pointerEvents: 'none',
-                zIndex: '1', overflow: 'hidden', height: '100vh'
-            });
-            fx.domElement.style[canvasId === 'weapon-left' ? 'left' : 'right'] = '20px';
-            fx.domElement.style.width = '200px';
-            canvas.style.display = 'none';
-            document.body.appendChild(fx.domElement);
+            // Sampling canvas for dithering
+            const COLS = Math.floor(w / DOT);
+            const ROWS = Math.floor(h / DOT);
+            const samp = document.createElement('canvas');
+            samp.width = COLS; samp.height = ROWS;
+            const sCtx = samp.getContext('2d', { willReadFrequently: true });
 
-            const mq12 = window.matchMedia('(max-width: 1200px)');
-            const mq8 = window.matchMedia('(max-width: 800px)');
-            function upd() {
-                if (mq8.matches) fx.domElement.style.display = 'none';
-                else if (mq12.matches) { fx.domElement.style.display = 'block'; fx.domElement.style.opacity = '0.15'; fx.domElement.style.width = '120px'; }
-                else { fx.domElement.style.display = 'block'; fx.domElement.style.opacity = '0.4'; fx.domElement.style.width = '200px'; }
-            }
-            mq12.addEventListener('change', upd); mq8.addEventListener('change', upd); upd();
+            outCanvas.width = w; outCanvas.height = h;
+            const ctx = outCanvas.getContext('2d');
 
-            // Y-axis rotation on scroll (vertical spin like display case), opposite directions
             const dir = mirror ? -1 : 1;
-            (function loop() {
+
+            function loop() {
                 requestAnimationFrame(loop);
                 mesh.rotation.y = scrollY * 0.003 * dir;
                 mesh.position.y = Math.sin(Date.now() * 0.001) * 0.08;
-                fx.render(scene, cam);
-            })();
+                renderer.render(scene, cam);
+
+                // Sample the 3D render at low res
+                sCtx.drawImage(glCanvas, 0, 0, COLS, ROWS);
+                const frame = sCtx.getImageData(0, 0, COLS, ROWS);
+                const px = frame.data;
+
+                // Dither to output canvas
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, w, h);
+                const out = ctx.createImageData(w, h);
+                const od = out.data;
+
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const i = (y * COLS + x) * 4;
+                        let brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
+                        if (brightness < 0.05) continue;
+
+                        // Gamma boost
+                        brightness = Math.pow(brightness, GAMMA);
+
+                        const threshold = BAYER8[y % 8][x % 8];
+                        if (brightness > threshold) {
+                            const mint = brightness;
+                            const r = Math.floor(138 + (1 - mint) * 100);
+                            const g = Math.floor(255 - (1 - mint) * 30);
+                            const b = Math.floor(180 - (1 - mint) * 80);
+                            const alpha = Math.min(255, Math.floor((brightness * 0.85 + 0.15) * 255));
+
+                            for (let dy = 0; dy < DOT; dy++) {
+                                for (let dx = 0; dx < DOT; dx++) {
+                                    const ox = x * DOT + dx;
+                                    const oy = y * DOT + dy;
+                                    if (ox >= w || oy >= h) continue;
+                                    const oi = (oy * w + ox) * 4;
+                                    od[oi] = r; od[oi+1] = g; od[oi+2] = b; od[oi+3] = alpha;
+                                }
+                            }
+                        }
+                    }
+                }
+                ctx.putImageData(out, 0, 0);
+            }
+            loop();
         }
 
         try {
