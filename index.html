@@ -428,7 +428,58 @@
         .footer a:hover { color: var(--mint); }
         .footer p + p { margin-top: var(--sp-2); }
 
-        /* ═══ 3D MODEL SECTION ═══ */
+        /* ═══ DECORATIVE WOW CHARACTERS ═══ */
+        .wow-char {
+            position: absolute;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s var(--ease-out);
+        }
+        .wow-char.visible { opacity: 1; pointer-events: auto; }
+        .wow-char-viewer {
+            width: 100%; height: 100%;
+            position: relative; z-index: 1;
+        }
+        .wow-char-viewer canvas { filter: sepia(0.1) hue-rotate(80deg) saturate(0.7) brightness(0.9); }
+        .wow-char-grain {
+            position: absolute; inset: 0; z-index: 2;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            animation: grain-shift 0.5s steps(4) infinite;
+        }
+        /* Hero character — right side of hero */
+        .wow-char-hero {
+            width: 280px; height: 350px;
+            right: 5%; bottom: 10%;
+        }
+        /* LAN section flankers */
+        .wow-char-lan-left {
+            width: 180px; height: 250px;
+            left: -60px; top: 80px;
+        }
+        .wow-char-lan-right {
+            width: 180px; height: 250px;
+            right: -60px; top: 80px;
+        }
+        /* Apply gatekeeper */
+        .wow-char-gatekeeper {
+            width: 220px; height: 300px;
+            right: -80px; top: 50%;
+            transform: translateY(-50%);
+        }
+        /* Fallback image for when 3D viewer unavailable */
+        .wow-char-fallback {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            filter: sepia(0.15) hue-rotate(80deg) saturate(0.8) brightness(0.9) contrast(1.15);
+        }
+        @media (max-width: 1100px) {
+            .wow-char { display: none !important; }
+        }
+
+        /* ═══ 3D MODEL SECTION (legacy) ═══ */
         .model-section {
             padding: var(--sp-8) var(--sp-4);
             max-width: 1100px;
@@ -676,56 +727,11 @@
         <div class="scroll-hint">scroll</div>
     </section>
 
-    <!-- ═══════════════ THE 7 DWARVES — 3D Models ═══════════════ -->
-    <div class="model-section reveal" id="dwarves">
-        <div class="model-section-header">
-            <div class="section-label">the.party</div>
-            <p style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-mid); letter-spacing: 2px; text-align: center;">CLICK A DWARF TO EMOTE</p>
-        </div>
-        <div class="model-row">
-            <div class="model-cell" data-name="Grumli" data-class="Warrior">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-0"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Grumli<span>Warrior</span></div>
-            </div>
-            <div class="model-cell" data-name="Thordak" data-class="Paladin">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-1"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Thordak<span>Paladin</span></div>
-            </div>
-            <div class="model-cell" data-name="Bofri" data-class="Hunter">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-2"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Bofri<span>Hunter</span></div>
-            </div>
-            <div class="model-cell" data-name="Snorri" data-class="Rogue">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-3"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Snorri<span>Rogue</span></div>
-            </div>
-            <div class="model-cell" data-name="Durin" data-class="Priest">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-4"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Durin<span>Priest</span></div>
-            </div>
-            <div class="model-cell" data-name="Kazrik" data-class="Mage">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-5"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Kazrik<span>Mage</span></div>
-            </div>
-            <div class="model-cell" data-name="Morgrim" data-class="Death Knight">
-                <div class="emote-bubble"></div>
-                <div class="model-frame" id="model-6"></div>
-                <div class="model-grain"></div>
-                <div class="model-label">Morgrim<span>Death Knight</span></div>
-            </div>
-        </div>
+    <!-- Decorative 3D character: The Raid Leader (hero accent) -->
+    <div class="wow-char wow-char-hero" id="char-hero" data-name="Grumli" aria-hidden="true">
+        <div class="wow-char-viewer" id="viewer-hero"></div>
+        <div class="wow-char-grain"></div>
+        <div class="emote-bubble"></div>
     </div>
 
     <!-- Lava ASCII grain divider -->
@@ -735,7 +741,17 @@
 
     <!-- ═══════════════ THE LAN ═══════════════ -->
 
-    <section class="section" id="lan">
+    <section class="section" id="lan" style="overflow:visible;">
+        <!-- Decorative flanker: Paladin welcoming -->
+        <div class="wow-char wow-char-lan-left" id="char-lan-l" data-name="Thordak" aria-hidden="true">
+            <div class="wow-char-viewer" id="viewer-lan-l"></div>
+            <div class="wow-char-grain"></div>
+        </div>
+        <!-- Decorative flanker: Hunter welcoming -->
+        <div class="wow-char wow-char-lan-right" id="char-lan-r" data-name="Bofri" aria-hidden="true">
+            <div class="wow-char-viewer" id="viewer-lan-r"></div>
+            <div class="wow-char-grain"></div>
+        </div>
         <div class="section-header reveal">
             <div class="section-label">the.main.event</div>
             <h2 class="section-title">The LAN</h2>
@@ -951,7 +967,12 @@
     <!-- ═══════════════ APPLY ═══════════════ -->
     <div class="lava-divider lava-lg" aria-hidden="true"><canvas class="lava-canvas"></canvas></div>
 
-    <section class="section" id="apply">
+    <section class="section" id="apply" style="overflow:visible;">
+        <!-- Decorative gatekeeper: Muradin -->
+        <div class="wow-char wow-char-gatekeeper" id="char-gate" data-name="Morgrim" aria-hidden="true">
+            <div class="wow-char-viewer" id="viewer-gate"></div>
+            <div class="wow-char-grain"></div>
+        </div>
         <div class="apply-box reveal">
             <h3>Request a Seat</h3>
             <p>Have an invite link? Use it below. Otherwise, apply and we'll review your request. Seats are limited and non-renewable once filled.</p>
@@ -1154,6 +1175,100 @@
 
             drawAllLava();
         })();
+    </script>
+
+    <!-- WoW 3D Model Viewer via CORS Proxy -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        // CORS proxy running on localhost:2999 proxies wow.zamimg.com
+        // For live site, replace with your hosted proxy URL
+        const CORS_PROXY = 'http://localhost:2999';
+        window.CONTENT_PATH = CORS_PROXY + '/modelviewer/live/';
+        window.WOTLK_TO_RETAIL_DISPLAY_ID_API = undefined;
+    </script>
+    <script src="http://localhost:2999/modelviewer/live/viewer/viewer.min.js" onerror="console.log('CORS proxy unavailable — using fallback renders')"></script>
+    <script>
+    (function() {
+        // Character definitions: position → NPC display ID + animations
+        const characters = [
+            { viewerId: 'viewer-hero',  charId: 'char-hero',  displayId: 4432,  idle: 'Stand', emote: 'EmoteDance', name: 'Grumli' },
+            { viewerId: 'viewer-lan-l', charId: 'char-lan-l', displayId: 21854, idle: 'Stand', emote: 'EmoteWave',  name: 'Thordak' },
+            { viewerId: 'viewer-lan-r', charId: 'char-lan-r', displayId: 25839, idle: 'Stand', emote: 'EmoteCheer', name: 'Bofri' },
+            { viewerId: 'viewer-gate',  charId: 'char-gate',  displayId: 26679, idle: 'Stand', emote: 'EmoteRoar',  name: 'Morgrim' },
+        ];
+
+        const fallbackRenders = {
+            4432:  { folder: 80 },
+            21854: { folder: 94 },
+            25839: { folder: 239 },
+            26679: { folder: 55 },
+        };
+
+        function initCharacters() {
+            const hasViewer = typeof ZamModelViewer !== 'undefined';
+
+            characters.forEach(char => {
+                const container = document.getElementById(char.viewerId);
+                const wrapper = document.getElementById(char.charId);
+                if (!container || !wrapper) return;
+
+                if (hasViewer) {
+                    try {
+                        const viewer = new ZamModelViewer({
+                            container: container,
+                            type: 8, // NPC
+                            contentPath: window.CONTENT_PATH,
+                            aspect: container.offsetWidth / container.offsetHeight,
+                            id: char.displayId,
+                            hd: false
+                        });
+                        container._viewer = viewer;
+                        container._char = char;
+
+                        // Show with fade
+                        setTimeout(() => wrapper.classList.add('visible'), 500);
+
+                        // Hover emote
+                        wrapper.addEventListener('mouseenter', () => {
+                            if (container._viewer) {
+                                try { container._viewer.setAnimation(char.emote); } catch(e) {}
+                            }
+                        });
+                        wrapper.addEventListener('mouseleave', () => {
+                            if (container._viewer) {
+                                try { container._viewer.setAnimation(char.idle); } catch(e) {}
+                            }
+                        });
+                        return;
+                    } catch(e) {
+                        console.log('Viewer failed for', char.name, e);
+                    }
+                }
+
+                // Fallback: use static render thumbnail
+                const fb = fallbackRenders[char.displayId];
+                if (fb) {
+                    const img = document.createElement('img');
+                    img.src = `https://wow.zamimg.com/modelviewer/live/webthumbs/npc/${fb.folder}/${char.displayId}.webp`;
+                    img.alt = char.name;
+                    img.className = 'wow-char-fallback';
+                    container.appendChild(img);
+                    setTimeout(() => wrapper.classList.add('visible'), 500);
+                }
+            });
+        }
+
+        // Observe wow-char elements for scroll reveal
+        const charObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.wow-char').forEach(el => charObserver.observe(el));
+
+        // Init after viewer.js loads
+        setTimeout(initCharacters, 1500);
+    })();
     </script>
 
     <!-- Three.js + ASCII Weapon Renderers -->
