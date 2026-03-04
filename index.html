@@ -292,6 +292,9 @@
             position: relative;
             height: 420px;
         }
+        .ascii-centerpiece video {
+            display: none; /* hidden source — frames read by canvas */
+        }
         .ascii-centerpiece canvas {
             width: 100%;
             height: 100%;
@@ -335,6 +338,7 @@
 
         <div class="fade">
             <div class="ascii-centerpiece">
+                <video id="hero-video" src="hero.mp4" autoplay loop muted playsinline></video>
                 <canvas id="hero-canvas" aria-hidden="true"></canvas>
             </div>
         </div>
@@ -580,77 +584,72 @@
             draw();
         })();
 
-        // ── Hero: Hearthstone ASCII — Pure Canvas Renderer ──
-        // SDF shape → brightness → ASCII chars drawn directly on canvas (no DOM)
+        // ── Hero: Video → ASCII Pipeline ──
+        // Read video frames, sample brightness, render as ASCII chars on canvas
         (function() {
+            const video = document.getElementById('hero-video');
             const canvas = document.getElementById('hero-canvas');
-            if (!canvas) return;
+            if (!video || !canvas) return;
 
             const W = 560, H = 420;
             canvas.width = W;
             canvas.height = H;
             const ctx = canvas.getContext('2d');
+
+            // Offscreen canvas to sample video frames
+            const sample = document.createElement('canvas');
+            const COLS = 80, ROWS = 38;
+            sample.width = COLS;
+            sample.height = ROWS;
+            const sCtx = sample.getContext('2d', { willReadFrequently: true });
+
             const chars = ' .·:;░▒▓█';
-            const CW = 7, CH = 11; // char cell size
-            const COLS = Math.floor(W / CW);
-            const ROWS = Math.floor(H / CH);
-            let t = 0;
+            const CW = W / COLS;
+            const CH = H / ROWS;
 
             function draw() {
+                requestAnimationFrame(draw);
+
+                // Clear
                 ctx.fillStyle = '#0a0a0a';
                 ctx.fillRect(0, 0, W, H);
+
+                // Sample video frame at low res
+                if (video.readyState < 2) return; // not ready yet
+                sCtx.drawImage(video, 0, 0, COLS, ROWS);
+                const frame = sCtx.getImageData(0, 0, COLS, ROWS);
+                const px = frame.data;
+
                 ctx.font = '10px "Share Tech Mono", monospace';
                 ctx.textBaseline = 'top';
 
                 for (let row = 0; row < ROWS; row++) {
                     for (let col = 0; col < COLS; col++) {
-                        // Normalize to -1..1
-                        const nx = (col / COLS) * 2 - 1;
-                        const ny = (row / ROWS) * 2 - 1;
+                        const i = (row * COLS + col) * 4;
+                        // Grayscale brightness from RGB
+                        const brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
 
-                        // Outer hearthstone shape (rounded rect)
-                        const dx = Math.abs(nx) - 0.5;
-                        const dy = Math.abs(ny) - 0.6;
-                        const outer = Math.min(Math.max(dx, dy), 0) +
-                            Math.sqrt(Math.max(dx, 0)**2 + Math.max(dy, 0)**2) - 0.18;
-
-                        if (outer >= 0.08) continue; // outside shape
-
-                        const angle = Math.atan2(ny, nx);
-                        const dist = Math.sqrt(nx*nx + ny*ny);
-
-                        // Swirling hearthstone spiral
-                        const spiral = Math.sin(angle * 4 + dist * 10 - t * 2) * 0.5 + 0.5;
-                        // Pulsing glow from center
-                        const glow = Math.max(0, 1 - dist * 1.5) * (Math.sin(t * 1.2) * 0.15 + 0.85);
-                        // Edge highlight
-                        const edge = Math.max(0, 1 - Math.abs(outer) * 15);
-                        // Portal ring
-                        const ring = Math.exp(-Math.pow((dist - 0.55) * 8, 2)) * 0.4;
-
-                        const brightness = Math.min(1, spiral * 0.35 + glow * 0.45 + edge * 0.25 + ring);
-
-                        if (brightness < 0.04) continue;
+                        // Skip dark pixels (transparent — the black background)
+                        if (brightness < 0.06) continue;
 
                         const ci = Math.floor(brightness * (chars.length - 1));
                         const ch = chars[Math.min(ci, chars.length - 1)];
 
-                        // Color: mint core → amber edges
-                        const mint = Math.max(0, 1 - dist * 1.3);
-                        const r = Math.floor(57 + (1 - mint) * 198);
-                        const g = Math.floor(255 - (1 - mint) * 85);
-                        const b = Math.floor(133 - (1 - mint) * 133);
-                        const a = brightness * 0.75 + 0.08;
+                        // Color: mint for bright areas, amber for mid, dim for edges
+                        const r = Math.floor(57 + (1 - brightness) * 198);
+                        const g = Math.floor(255 - (1 - brightness) * 85);
+                        const b = Math.floor(133 - (1 - brightness) * 133);
+                        const a = brightness * 0.8 + 0.1;
 
                         ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
                         ctx.fillText(ch, col * CW, row * CH);
                     }
                 }
-
-                t += 0.02;
-                requestAnimationFrame(draw);
             }
-            draw();
+
+            // Start when video is ready
+            video.addEventListener('loadeddata', () => requestAnimationFrame(draw));
+            if (video.readyState >= 2) requestAnimationFrame(draw);
         })();
     </script>
 
