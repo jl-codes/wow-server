@@ -7,6 +7,16 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <style>
         @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
+            font-weight: 400; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
+            font-weight: 600; font-style: normal; font-display: swap;
+        }
+        @font-face {
             font-family: 'Geist Mono';
             src: url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/GeistMono-Regular.woff2') format('woff2');
             font-weight: 400; font-style: normal; font-display: swap;
@@ -14,18 +24,20 @@
     </style>
     <style>
         :root {
-            --mint: #39ff85;
-            --mint-dim: #1a9e4e;
-            --amber: #ffaa00;
-            --amber-dim: rgba(255, 170, 0, 0.6);
+            --mint: #6aff9e;
+            --mint-dim: #3dcc6e;
+            --amber: #ffbb33;
+            --amber-dim: rgba(255, 187, 51, 0.6);
             --black: #0a0a0a;
             --gray-dark: #151515;
             --gray: #1e1e1e;
             --gray-mid: #333;
             --gray-text: #555;
-            --text: #777;
-            --text-bright: #999;
-            --font: 'Geist Mono', 'Courier New', monospace;
+            --text: #888;
+            --text-bright: #aaa;
+            --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Geist Mono', 'Courier New', monospace;
+            --font: var(--font-sans);
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -61,8 +73,8 @@
         .bg-grid {
             position: fixed; inset: 0; z-index: -1;
             background-image:
-                linear-gradient(rgba(57,255,133,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(57,255,133,0.015) 1px, transparent 1px);
+                linear-gradient(rgba(106,255,158,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(106,255,158,0.015) 1px, transparent 1px);
             background-size: 80px 80px;
         }
 
@@ -99,7 +111,8 @@
             color: var(--mint);
             line-height: 1.2;
             margin-bottom: 8px;
-            text-shadow: 0 0 20px rgba(57,255,133,0.15);
+            font-weight: 600;
+            text-shadow: 0 0 20px rgba(106,255,158,0.2);
         }
 
         .subtitle {
@@ -111,6 +124,7 @@
 
         /* Form */
         .section-label {
+            font-family: var(--font-mono);
             font-size: 11px;
             color: var(--gray-mid);
             letter-spacing: 2px;
@@ -207,11 +221,11 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: box-shadow 0.3s, transform 0.15s;
-            box-shadow: 0 0 20px rgba(57,255,133,0.15);
+            box-shadow: 0 0 20px rgba(106,255,158,0.15);
             margin-top: 32px;
         }
         .submit-btn:hover {
-            box-shadow: 0 0 40px rgba(57,255,133,0.3), 0 0 80px rgba(57,255,133,0.1);
+            box-shadow: 0 0 40px rgba(106,255,158,0.3), 0 0 80px rgba(106,255,158,0.1);
             transform: translateY(-1px);
         }
         .submit-btn:active { transform: translateY(0); }
