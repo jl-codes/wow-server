@@ -366,14 +366,9 @@
         .hero-text.show { opacity: 1; }
 
         /* ── Promo Section ── */
-        .promo-section {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-        }
         .promo-wrap {
             position: relative;
-            width: 80%;
+            width: 100%;
             aspect-ratio: 1;
         }
         .promo-border {
@@ -387,7 +382,9 @@
             height: 100%;
             display: block;
         }
-        /* Content positioned in the cleared interior */
+        /* Content positioned precisely in the cleared GIF interior
+           GIF 512×512, interior x168-340 y118-365
+           As %: left 32.8%, right 33.6%, top 23%, bottom 28.7% */
         .promo-content {
             position: absolute;
             left: 33%;
@@ -401,59 +398,54 @@
             align-items: center;
             text-align: center;
             overflow: hidden;
-            gap: 4px;
-        }
-        /* Mount image — flies outside the frame to the right */
-        .promo-mount {
-            position: absolute;
-            right: -15%;
-            top: 10%;
-            width: 55%;
-            z-index: 3;
-            filter: drop-shadow(0 0 24px rgba(138,255,180,0.5)) drop-shadow(0 0 60px rgba(138,255,180,0.2));
-            animation: mountFloat 4s ease-in-out infinite;
-            pointer-events: none;
-        }
-        @keyframes mountFloat {
-            0%, 100% { transform: translateY(0) rotate(-2deg); }
-            50% { transform: translateY(-8px) rotate(2deg); }
+            gap: 6px;
         }
         .promo-badge {
             font-family: var(--font-mono);
-            font-size: clamp(7px, 1.4vw, 10px);
+            font-size: clamp(8px, 1.6vw, 11px);
             letter-spacing: 2px;
             text-transform: uppercase;
             color: var(--mint);
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .promo-badge::before {
+            content: '◆';
+            animation: promoDot 1.5s ease-in-out infinite;
+        }
+        @keyframes promoDot {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
         .promo-title {
             font-family: var(--font-pixel);
-            font-size: clamp(11px, 2.2vw, 18px);
-            color: #fff;
+            font-size: clamp(13px, 2.8vw, 20px);
+            color: var(--mint);
             line-height: 1.3;
             flex-shrink: 0;
-            text-shadow: 0 0 12px rgba(255,255,255,0.15);
+            text-shadow: 0 0 16px rgba(138,255,180,0.25);
         }
         .promo-price {
             font-family: var(--font-mono);
             display: flex;
-            align-items: baseline;
-            gap: 6px;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
             flex-shrink: 0;
         }
         .promo-price .amount {
-            font-size: clamp(16px, 3.5vw, 28px);
-            color: var(--amber);
+            font-size: clamp(18px, 4vw, 28px);
+            color: var(--mint);
             font-weight: 500;
-            text-shadow: 0 0 10px rgba(255,187,51,0.3);
+            text-shadow: 0 0 12px rgba(138,255,180,0.3);
         }
         .promo-price .label {
-            color: var(--gray-text);
-            letter-spacing: 1px;
-            font-size: clamp(7px, 1.2vw, 10px);
-        }
-        @media (max-width: 480px) {
-            .promo-mount { width: 45%; right: -10%; top: 15%; }
+            color: var(--mint-dim);
+            letter-spacing: 1.5px;
+            font-size: clamp(7px, 1.2vw, 9px);
+            opacity: 0.7;
         }
 
         /* ── Footer ── */
@@ -629,20 +621,15 @@
         <div class="fade">
             <div class="promo-wrap">
                 <div class="promo-border"><img src="frame.gif" alt="" loading="lazy"></div>
-                <img src="alar-mount.png" alt="Ashes of Al'ar — Matrix Edition" class="promo-mount">
                 <div class="promo-content">
                     <div class="promo-badge">Founding Supporter</div>
                     <div class="promo-title">Ashes of Al'ar<br>Matrix Edition</div>
                     <div class="promo-price">
                         <span class="amount">$100</span>
-                        <span class="label">LIFETIME</span>
+                        <span class="label">ONE-TIME · LIFETIME</span>
                     </div>
                 </div>
             </div>
-            <div class="gap-sm"></div>
-            <p class="prose" style="text-align: center; margin: 0 auto;">
-                A custom phoenix mount in the signature dithered style. <em>Only for founding supporters.</em> Never sold again once 100 seats fill. Ships to your account on day one.
-            </p>
         </div>
 
         <div class="breath-quarter"></div>
