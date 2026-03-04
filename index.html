@@ -428,7 +428,87 @@
         .footer a:hover { color: var(--mint); }
         .footer p + p { margin-top: var(--sp-2); }
 
-        /* ═══ DWARF PARTY ═══ */
+        /* ═══ 3D MODEL SECTION ═══ */
+        .model-section {
+            padding: var(--sp-8) var(--sp-4);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .model-section-header { text-align: center; margin-bottom: var(--sp-6); }
+        .model-row {
+            display: flex; justify-content: center; align-items: flex-end;
+            gap: var(--sp-2); flex-wrap: wrap;
+        }
+        .model-cell {
+            position: relative; cursor: pointer;
+            width: 130px; height: 200px;
+            border: 1px solid var(--gray-dark); border-radius: 2px;
+            background: var(--black-card); overflow: hidden;
+            transition: border-color var(--duration-normal) var(--ease-out),
+                        transform var(--duration-fast) var(--ease-spring),
+                        box-shadow var(--duration-normal) var(--ease-out);
+        }
+        .model-cell:hover {
+            border-color: rgba(57,255,133,0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 15px rgba(57,255,133,0.05);
+        }
+        .model-frame {
+            width: 100%; height: 160px;
+            position: relative; z-index: 1;
+        }
+        /* Green CRT tint overlay on the WoWHead viewer */
+        .model-frame::after {
+            content: ''; position: absolute; inset: 0; z-index: 2;
+            background: rgba(57, 255, 133, 0.06);
+            mix-blend-mode: color;
+            pointer-events: none;
+        }
+        /* Grain overlay */
+        .model-grain {
+            position: absolute; inset: 0; z-index: 3;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+            opacity: 0.4;
+            animation: grain-shift 0.5s steps(4) infinite;
+        }
+        @keyframes grain-shift {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+        .model-label {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
+            padding: var(--sp-1) var(--sp-2);
+            background: linear-gradient(transparent, rgba(10,10,10,0.95));
+            font-family: var(--font-mono); font-size: 8px;
+            color: var(--mint-dim); letter-spacing: 1px; text-transform: uppercase;
+            text-align: center;
+        }
+        .model-label span {
+            display: block; font-size: 7px; color: var(--gray-dark);
+            margin-top: 1px;
+        }
+
+        /* Lava ASCII divider */
+        .lava-divider {
+            width: 100%; height: 40px; overflow: hidden;
+            position: relative;
+        }
+        .lava-divider canvas {
+            width: 100%; height: 100%;
+            display: block;
+            opacity: 0.15;
+        }
+
+        @media (max-width: 640px) {
+            .model-cell { width: 90px; height: 150px; }
+            .model-frame { height: 120px; }
+        }
+
+        /* ═══ DWARF PARTY (legacy) ═══ */
         .dwarf-party {
             display: flex; justify-content: center; align-items: flex-end;
             gap: var(--sp-3); padding: var(--sp-8) var(--sp-4);
@@ -595,52 +675,62 @@
         <div class="scroll-hint">scroll</div>
     </section>
 
-    <!-- ═══════════════ THE 7 DWARVES ═══════════════ -->
-    <div class="dwarf-party reveal" id="dwarves">
-        <div class="dwarf" data-name="Grumli" data-class="Warrior" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt="Warrior"></div>
-            <div class="dwarf-name">Grumli</div>
-            <div class="dwarf-class">Warrior</div>
+    <!-- ═══════════════ THE 7 DWARVES — 3D Models ═══════════════ -->
+    <div class="model-section reveal" id="dwarves">
+        <div class="model-section-header">
+            <div class="section-label">the.party</div>
+            <p style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-mid); letter-spacing: 2px; text-align: center;">CLICK A DWARF TO EMOTE</p>
         </div>
-        <div class="dwarf" data-name="Thordak" data-class="Paladin" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_paladin.jpg" alt="Paladin"></div>
-            <div class="dwarf-name">Thordak</div>
-            <div class="dwarf-class">Paladin</div>
-        </div>
-        <div class="dwarf" data-name="Bofri" data-class="Hunter" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg" alt="Hunter"></div>
-            <div class="dwarf-name">Bofri</div>
-            <div class="dwarf-class">Hunter</div>
-        </div>
-        <div class="dwarf" data-name="Snorri" data-class="Rogue" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_rogue.jpg" alt="Rogue"></div>
-            <div class="dwarf-name">Snorri</div>
-            <div class="dwarf-class">Rogue</div>
-        </div>
-        <div class="dwarf" data-name="Durin" data-class="Priest" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg" alt="Priest"></div>
-            <div class="dwarf-name">Durin</div>
-            <div class="dwarf-class">Priest</div>
-        </div>
-        <div class="dwarf" data-name="Kazrik" data-class="Mage" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg" alt="Mage"></div>
-            <div class="dwarf-name">Kazrik</div>
-            <div class="dwarf-class">Mage</div>
-        </div>
-        <div class="dwarf" data-name="Morgrim" data-class="Death Knight" onclick="emote(this)">
-            <div class="emote-bubble"></div>
-            <div class="dwarf-icon"><img src="https://wow.zamimg.com/images/wow/icons/large/classicon_deathknight.jpg" alt="Death Knight"></div>
-            <div class="dwarf-name">Morgrim</div>
-            <div class="dwarf-class">Death Knight</div>
+        <div class="model-row">
+            <div class="model-cell" data-name="Grumli" data-class="Warrior">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-0"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Grumli<span>Warrior</span></div>
+            </div>
+            <div class="model-cell" data-name="Thordak" data-class="Paladin">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-1"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Thordak<span>Paladin</span></div>
+            </div>
+            <div class="model-cell" data-name="Bofri" data-class="Hunter">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-2"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Bofri<span>Hunter</span></div>
+            </div>
+            <div class="model-cell" data-name="Snorri" data-class="Rogue">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-3"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Snorri<span>Rogue</span></div>
+            </div>
+            <div class="model-cell" data-name="Durin" data-class="Priest">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-4"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Durin<span>Priest</span></div>
+            </div>
+            <div class="model-cell" data-name="Kazrik" data-class="Mage">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-5"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Kazrik<span>Mage</span></div>
+            </div>
+            <div class="model-cell" data-name="Morgrim" data-class="Death Knight">
+                <div class="emote-bubble"></div>
+                <div class="model-frame" id="model-6"></div>
+                <div class="model-grain"></div>
+                <div class="model-label">Morgrim<span>Death Knight</span></div>
+            </div>
         </div>
     </div>
-    <p style="text-align:center; font-family: var(--font-mono); font-size: 9px; color: var(--gray-dark); letter-spacing: 2px; margin-bottom: var(--sp-8);">CLICK A DWARF</p>
+
+    <!-- Lava ASCII grain divider -->
+    <div class="lava-divider" aria-hidden="true">
+        <canvas id="lava-canvas"></canvas>
+    </div>
 
     <!-- ═══════════════ THE LAN ═══════════════ -->
     <div class="divider"><div class="divider-line"></div></div>
@@ -959,6 +1049,115 @@
                 el.classList.remove('emoting');
             }, 2500);
         }
+    </script>
+
+    <!-- WoWHead 3D Model Viewer -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        window.CONTENT_PATH = 'https://wow.zamimg.com/modelviewer/live/';
+        window.WOTLK_TO_RETAIL_DISPLAY_ID_API = undefined;
+    </script>
+    <script src="https://wow.zamimg.com/modelviewer/live/viewer/viewer.min.js" onerror="console.log('WoWHead viewer unavailable, using fallback')"></script>
+    <script>
+        // Initialize WoW 3D character models
+        (function() {
+            // NPC display IDs for dwarf-like characters
+            const npcIds = [
+                { id: 11832, name: 'Grumli' },    // Dwarf warrior type
+                { id: 928, name: 'Thordak' },      // Dwarf paladin type
+                { id: 4256, name: 'Bofri' },       // Dwarf hunter type
+                { id: 8584, name: 'Snorri' },      // Dwarf rogue type
+                { id: 1226, name: 'Durin' },       // Dwarf priest type
+                { id: 5144, name: 'Kazrik' },      // Dwarf mage type
+                { id: 24949, name: 'Morgrim' },    // Death knight type
+            ];
+
+            const emoteAnims = ['Emote Dance', 'Emote Wave', 'Emote Cheer', 'Emote Roar', 'Emote Laugh', 'Emote Flex', 'Emote Salute'];
+
+            function initModels() {
+                if (typeof ZamModelViewer === 'undefined') {
+                    // Fallback: show class icons instead
+                    document.querySelectorAll('.model-frame').forEach((frame, i) => {
+                        const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
+                        frame.style.backgroundImage = `url(https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg)`;
+                        frame.style.backgroundSize = 'cover';
+                        frame.style.backgroundPosition = 'center';
+                        frame.style.filter = 'sepia(1) hue-rotate(90deg) saturate(0.5) brightness(0.7) contrast(1.3)';
+                    });
+                    return;
+                }
+
+                npcIds.forEach((npc, i) => {
+                    const el = document.getElementById('model-' + i);
+                    if (!el) return;
+                    try {
+                        const viewer = new ZamModelViewer({
+                            container: el,
+                            type: 8, // NPC
+                            contentPath: window.CONTENT_PATH,
+                            aspect: el.offsetWidth / el.offsetHeight,
+                            id: npc.id,
+                            hd: false
+                        });
+                        el._viewer = viewer;
+                    } catch(e) {
+                        // Fallback to icon
+                        const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
+                        el.style.backgroundImage = `url(https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg)`;
+                        el.style.backgroundSize = 'cover';
+                        el.style.backgroundPosition = 'center';
+                        el.style.filter = 'sepia(1) hue-rotate(90deg) saturate(0.5) brightness(0.7)';
+                    }
+                });
+            }
+
+            // Click handler for model cells
+            document.querySelectorAll('.model-cell').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    emote(this);
+                    // Try to trigger animation on the 3D model
+                    const frame = this.querySelector('.model-frame');
+                    if (frame && frame._viewer) {
+                        const anim = emoteAnims[Math.floor(Math.random() * emoteAnims.length)];
+                        try { frame._viewer.setAnimation(anim); } catch(e) {}
+                    }
+                });
+            });
+
+            // Init after a short delay to let viewer.js load
+            setTimeout(initModels, 1000);
+        })();
+
+        // ── Lava ASCII Canvas ──
+        (function() {
+            const canvas = document.getElementById('lava-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 40;
+
+            const chars = '░▒▓█▓▒░·.·░▒▓';
+            let t = 0;
+
+            function drawLava() {
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '10px "Share Tech Mono", monospace';
+
+                for (let x = 0; x < canvas.width; x += 8) {
+                    for (let y = 0; y < canvas.height; y += 12) {
+                        const noise = Math.sin(x * 0.02 + t) * Math.cos(y * 0.1 + t * 0.7) + Math.sin(x * 0.01 - t * 0.5);
+                        const idx = Math.floor((noise + 2) / 4 * chars.length) % chars.length;
+                        const brightness = Math.floor((noise + 2) / 4 * 100 + 20);
+                        ctx.fillStyle = `rgba(57, 255, 133, ${brightness / 400})`;
+                        ctx.fillText(chars[idx], x, y + 10);
+                    }
+                }
+                t += 0.02;
+                requestAnimationFrame(drawLava);
+            }
+            drawLava();
+        })();
     </script>
 
     <!-- Three.js + ASCII Weapon Renderers -->
