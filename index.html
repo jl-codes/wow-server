@@ -366,38 +366,32 @@
         .hero-text.show { opacity: 1; }
 
         /* ── Promo Frame ── */
-        .promo-frame {
+        .promo-wrap {
             position: relative;
-            border: 1px solid var(--mint-dim);
-            padding: 32px 28px;
-            background: rgba(10, 10, 10, 0.9);
-            overflow: hidden;
+            width: 100%;
+            max-width: 512px;
+            aspect-ratio: 1;
         }
-        .promo-frame::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: repeating-linear-gradient(
-                0deg, transparent, transparent 2px,
-                rgba(138,255,180,0.03) 2px, rgba(138,255,180,0.03) 4px
-            );
+        .promo-border {
+            position: absolute;
+            inset: 0;
             pointer-events: none;
-            animation: promoScan 4s linear infinite;
+            z-index: 2;
         }
-        @keyframes promoScan {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(4px); }
+        .promo-border img {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
-        .promo-frame::after {
-            content: '';
-            position: absolute; inset: -1px;
-            border: 1px solid var(--mint);
-            opacity: 0;
-            animation: promoPulse 2s ease-in-out infinite;
-            pointer-events: none;
-        }
-        @keyframes promoPulse {
-            0%, 100% { opacity: 0; box-shadow: 0 0 0 rgba(138,255,180,0); }
-            50% { opacity: 1; box-shadow: 0 0 20px rgba(138,255,180,0.15), inset 0 0 20px rgba(138,255,180,0.05); }
+        .promo-content {
+            position: absolute;
+            inset: 60px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
         .promo-badge {
             font-family: var(--font-mono);
@@ -427,11 +421,11 @@
             text-shadow: 0 0 20px rgba(255,255,255,0.2);
         }
         .promo-desc {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text);
             line-height: 1.8;
-            margin-bottom: 20px;
-            max-width: 420px;
+            margin-bottom: 16px;
+            max-width: 340px;
         }
         .promo-desc em {
             color: var(--text-bright);
@@ -446,7 +440,7 @@
             margin-bottom: 4px;
         }
         .promo-price .amount {
-            font-size: 28px;
+            font-size: 32px;
             color: var(--amber);
             font-weight: 500;
             text-shadow: 0 0 15px rgba(255,187,51,0.3);
@@ -454,24 +448,18 @@
         .promo-price .label {
             color: var(--gray-text);
             letter-spacing: 1px;
+            font-size: 10px;
         }
         .promo-note {
             font-family: var(--font-mono);
-            font-size: 11px;
+            font-size: 10px;
             color: var(--gray-mid);
             letter-spacing: 1px;
             margin-top: 4px;
         }
-        .promo-rain {
-            position: absolute;
-            top: 0; right: 0;
-            width: 120px; height: 100%;
-            overflow: hidden;
-            pointer-events: none;
-            opacity: 0.12;
-        }
-        .promo-rain canvas {
-            width: 100%; height: 100%;
+        @media (max-width: 480px) {
+            .promo-content { inset: 40px; }
+            .promo-desc { font-size: 11px; }
         }
 
         /* ── Footer ── */
@@ -645,18 +633,20 @@
 
         <!-- ── Founding Supporter Promo ── -->
         <div class="fade">
-            <div class="promo-frame">
-                <div class="promo-rain"><canvas id="promo-rain-canvas"></canvas></div>
-                <div class="promo-badge">Founding Supporter Exclusive</div>
-                <div class="promo-title">Ashes of Al'ar<br>Matrix Edition</div>
-                <p class="promo-desc">
-                    A custom phoenix mount rendered in the signature dithered style of the 7 Dwarves. <em>Only available to founding supporters.</em> This mount will never be sold again once all 100 seats are filled.
-                </p>
-                <div class="promo-price">
-                    <span class="amount">$100</span>
-                    <span class="label">ONE-TIME · LIFETIME MOUNT</span>
+            <div class="promo-wrap">
+                <div class="promo-border"><img src="frame.gif" alt="" loading="lazy"></div>
+                <div class="promo-content">
+                    <div class="promo-badge">Founding Supporter Exclusive</div>
+                    <div class="promo-title">Ashes of Al'ar<br>Matrix Edition</div>
+                    <p class="promo-desc">
+                        A custom phoenix mount in the signature dithered style. <em>Only for founding supporters.</em> Never sold again once 100 seats fill.
+                    </p>
+                    <div class="promo-price">
+                        <span class="amount">$100</span>
+                        <span class="label">ONE-TIME · LIFETIME</span>
+                    </div>
+                    <p class="promo-note">Ships to your account on day one.</p>
                 </div>
-                <p class="promo-note">Included with your first seat application. Ships to your account on day one.</p>
             </div>
         </div>
 
@@ -873,36 +863,6 @@
                     }
                 });
                 t += 0.012;
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
-
-        // ── Promo frame matrix rain ──
-        (function() {
-            const c = document.getElementById('promo-rain-canvas');
-            if (!c) return;
-            c.width = 120; c.height = 300;
-            const ctx = c.getContext('2d');
-            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
-            const cols = 12;
-            const drops = Array(cols).fill(0).map(() => Math.random() * -20);
-            const fontSize = 10;
-
-            function draw() {
-                ctx.fillStyle = 'rgba(10,10,10,0.15)';
-                ctx.fillRect(0, 0, c.width, c.height);
-                ctx.font = fontSize + 'px "Geist Mono", monospace';
-                ctx.fillStyle = '#8affb4';
-
-                for (let i = 0; i < cols; i++) {
-                    const ch = chars[Math.floor(Math.random() * chars.length)];
-                    const x = i * (c.width / cols);
-                    const y = drops[i] * fontSize;
-                    ctx.fillText(ch, x, y);
-                    if (y > c.height && Math.random() > 0.975) drops[i] = 0;
-                    drops[i] += 0.4 + Math.random() * 0.3;
-                }
                 requestAnimationFrame(draw);
             }
             draw();
