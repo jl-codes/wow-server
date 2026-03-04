@@ -597,13 +597,15 @@
             draw();
         })();
 
-        // ── Hero: Video → Bayer 8x8 Dithered ASCII Pipeline ──
+        // ── Hero: Video → Pixel Halftone Dithering (Bayer 8x8) ──
+        // Fine dot-based dithering like newspaper print
         (function() {
             const video = document.getElementById('hero-video');
             const canvas = document.getElementById('hero-canvas');
             const heroText = document.getElementById('hero-text');
             if (!video || !canvas) return;
 
+            // High-res output for fine halftone dots
             const W = 600, H = 600;
             canvas.width = W;
             canvas.height = H;
@@ -621,25 +623,17 @@
                 [63, 31, 55, 23, 61, 29, 53, 21]
             ].map(row => row.map(v => v / 64));
 
-            // Sample at higher res for finer dithering
-            const COLS = 120, ROWS = 60;
+            // Sample resolution — each pixel becomes a tiny dot
+            const DOT = 3; // dot size in pixels (2x2 = fine halftone)
+            const COLS = Math.floor(W / DOT);
+            const ROWS = Math.floor(H / DOT);
+
             const sample = document.createElement('canvas');
             sample.width = COLS;
             sample.height = ROWS;
             const sCtx = sample.getContext('2d', { willReadFrequently: true });
 
-            // 2x2 block characters for dithering output
-            // Each 2x2 block of sampled pixels → one character
-            const BLOCK_COLS = Math.floor(COLS / 2);
-            const BLOCK_ROWS = Math.floor(ROWS / 2);
-            const CW = W / BLOCK_COLS;
-            const CH = H / BLOCK_ROWS;
-
-            // Characters ordered by visual density (for 2x2 block mapping)
-            const chars = ' .·:░▒▓█';
-
             let videoEnded = false;
-            let animId = null;
 
             function renderFrame() {
                 ctx.fillStyle = '#0a0a0a';
@@ -647,7 +641,7 @@
 
                 if (video.readyState < 2) return;
 
-                // Draw video preserving aspect ratio (center-crop/fit)
+                // Draw video preserving aspect ratio
                 const vw = video.videoWidth || 1;
                 const vh = video.videoHeight || 1;
                 const vAspect = vw / vh;
@@ -664,67 +658,62 @@
                 const frame = sCtx.getImageData(0, 0, COLS, ROWS);
                 const px = frame.data;
 
-                ctx.font = Math.round(CH) + 'px "Geist Mono", monospace';
-                ctx.textBaseline = 'top';
+                // Use ImageData for direct pixel manipulation (much faster)
+                const out = ctx.createImageData(W, H);
+                const od = out.data;
 
-                for (let by = 0; by < BLOCK_ROWS; by++) {
-                    for (let bx = 0; bx < BLOCK_COLS; bx++) {
-                        // Sample 2x2 block of pixels
-                        let totalBright = 0;
-                        let totalR = 0, totalG = 0, totalB = 0;
-                        let maxBright = 0;
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const i = (y * COLS + x) * 4;
+                        const brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
 
-                        for (let dy = 0; dy < 2; dy++) {
-                            for (let dx = 0; dx < 2; dx++) {
-                                const px_x = bx * 2 + dx;
-                                const px_y = by * 2 + dy;
-                                const i = (px_y * COLS + px_x) * 4;
-                                const bright = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
-                                totalBright += bright;
-                                totalR += px[i]; totalG += px[i+1]; totalB += px[i+2];
-                                if (bright > maxBright) maxBright = bright;
+                        // Skip black background
+                        if (brightness < 0.03) continue;
+
+                        // Bayer 8x8 threshold
+                        const threshold = BAYER8[y % 8][x % 8];
+
+                        // Dithered: pixel is ON if brightness > threshold
+                        if (brightness > threshold) {
+                            // Color: mint, with brightness-based alpha
+                            const alpha = Math.min(255, Math.floor((brightness * 0.8 + 0.2) * 255));
+                            // Slight color shift: brighter = more mint, dimmer = more amber
+                            const mint = brightness;
+                            const r = Math.floor(57 + (1 - mint) * 180);
+                            const g = Math.floor(255 - (1 - mint) * 70);
+                            const b = Math.floor(133 - (1 - mint) * 100);
+
+                            // Fill the DOTxDOT block
+                            for (let dy = 0; dy < DOT; dy++) {
+                                for (let dx = 0; dx < DOT; dx++) {
+                                    const ox = x * DOT + dx;
+                                    const oy = y * DOT + dy;
+                                    if (ox >= W || oy >= H) continue;
+                                    const oi = (oy * W + ox) * 4;
+                                    od[oi] = r;
+                                    od[oi + 1] = g;
+                                    od[oi + 2] = b;
+                                    od[oi + 3] = alpha;
+                                }
                             }
                         }
-
-                        const avgBright = totalBright / 4;
-
-                        // Skip dark blocks (black bg = transparent)
-                        if (avgBright < 0.04) continue;
-
-                        // Bayer 8x8 dithering threshold
-                        const bayer = BAYER8[by % 8][bx % 8];
-                        const dithered = avgBright + (bayer - 0.5) * 0.3;
-                        const clamped = Math.max(0, Math.min(1, dithered));
-
-                        if (clamped < 0.05) continue;
-
-                        const ci = Math.floor(clamped * (chars.length - 1));
-                        const ch = chars[Math.min(ci, chars.length - 1)];
-
-                        // Color: mint for bright, amber for dim
-                        const mint = clamped;
-                        const r = Math.floor(57 + (1 - mint) * 198);
-                        const g = Math.floor(255 - (1 - mint) * 85);
-                        const b = Math.floor(133 - (1 - mint) * 133);
-                        const a = clamped * 0.85 + 0.1;
-
-                        ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-                        ctx.fillText(ch, bx * CW, by * CH);
                     }
                 }
+
+                ctx.putImageData(out, 0, 0);
             }
 
             function draw() {
                 renderFrame();
                 if (!videoEnded) {
-                    animId = requestAnimationFrame(draw);
+                    requestAnimationFrame(draw);
                 }
             }
 
             // Video ends → show text overlay, keep last frame
             video.addEventListener('ended', () => {
                 videoEnded = true;
-                renderFrame(); // render final frame
+                renderFrame();
                 if (heroText) heroText.classList.add('show');
             });
 
@@ -734,7 +723,7 @@
                     document.addEventListener('click', () => video.play(), { once: true });
                     document.addEventListener('scroll', () => video.play(), { once: true });
                 });
-                animId = requestAnimationFrame(draw);
+                requestAnimationFrame(draw);
             }
             video.addEventListener('loadeddata', startVideo);
             if (video.readyState >= 2) startVideo();
