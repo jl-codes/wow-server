@@ -233,13 +233,14 @@
         /* ── Lava horizon line ── */
         .horizon {
             width: 100%;
-            height: 20px;
+            height: 80px;
             overflow: hidden;
-            opacity: 0.4;
+            opacity: 0.5;
         }
         .horizon canvas {
             width: 100%; height: 100%;
             display: block;
+            cursor: crosshair;
         }
 
         /* ── The Button ── */
@@ -594,16 +595,31 @@
             });
         });
 
-        // ── Lava horizon lines ──
+        // ── Lava horizon lines (thick, mouse-reactive) ──
         (function() {
             const canvases = document.querySelectorAll('.lava-canvas');
-            const chars = '░▒▓█▓▒░';
+            const chars = '░▒▓█▓▒░·:;';
+            const CW = 7, CH = 12;
             let t = 0;
+
+            // Track mouse per canvas
+            const mouseState = new Map();
+            canvases.forEach(c => {
+                const state = { x: -1, y: -1, active: false };
+                mouseState.set(c, state);
+                c.addEventListener('mousemove', e => {
+                    const rect = c.getBoundingClientRect();
+                    state.x = (e.clientX - rect.left) / rect.width * c.width;
+                    state.y = (e.clientY - rect.top) / rect.height * c.height;
+                    state.active = true;
+                });
+                c.addEventListener('mouseleave', () => { state.active = false; });
+            });
 
             function size() {
                 canvases.forEach(c => {
                     c.width = Math.min(600, c.parentElement.offsetWidth);
-                    c.height = 20;
+                    c.height = 80;
                 });
             }
             size();
@@ -616,19 +632,58 @@
                     if (!w) return;
                     ctx.fillStyle = '#0a0a0a';
                     ctx.fillRect(0, 0, w, h);
-                    ctx.font = '10px "Geist Mono", monospace';
+                    ctx.font = CH + 'px "Geist Mono", monospace';
+                    ctx.textBaseline = 'top';
+
+                    const ms = mouseState.get(c);
+                    const cols = Math.ceil(w / CW);
+                    const rows = Math.ceil(h / CH);
                     const off = ci * 50;
-                    for (let x = 0; x < w; x += 7) {
-                        const nx = x * 0.02 + off;
-                        const noise = Math.sin(nx + t * 0.6) * Math.cos(t * 0.3) + Math.sin(nx * 0.5 - t * 0.4) * 0.5;
-                        const norm = (noise + 1.5) / 3;
-                        const idx = Math.floor(norm * chars.length) % chars.length;
-                        const alpha = norm * 0.25 + 0.03;
-                        const r = Math.floor(138 + norm * 100);
-                        const g = Math.floor(255 - norm * 25);
-                        const b = Math.floor(180 - norm * 70);
-                        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
-                        ctx.fillText(chars[idx], x, 14);
+
+                    for (let row = 0; row < rows; row++) {
+                        for (let col = 0; col < cols; col++) {
+                            const px = col * CW;
+                            const py = row * CH;
+
+                            // Base noise
+                            const nx = col * 0.08 + off;
+                            const ny = row * 0.15;
+                            let noise = Math.sin(nx + t * 0.6) * Math.cos(ny + t * 0.3)
+                                      + Math.sin(nx * 0.5 - t * 0.4 + ny * 2) * 0.5
+                                      + Math.sin(ny * 3 + t * 0.8) * 0.3;
+
+                            // Mouse distortion — warp noise near cursor
+                            if (ms.active) {
+                                const dx = px - ms.x;
+                                const dy = py - ms.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                const radius = 80;
+                                if (dist < radius) {
+                                    const influence = 1 - dist / radius;
+                                    const warp = influence * influence * 3;
+                                    noise += Math.sin(dist * 0.1 + t * 4) * warp;
+                                    noise += Math.cos(Math.atan2(dy, dx) * 3 + t * 2) * warp * 0.5;
+                                }
+                            }
+
+                            // Vertical fade — stronger in center rows
+                            const vy = row / rows;
+                            const vFade = Math.sin(vy * Math.PI); // 0 at edges, 1 in center
+
+                            const norm = Math.max(0, Math.min(1, (noise + 2) / 4));
+                            const brightness = norm * vFade;
+
+                            if (brightness < 0.03) continue;
+
+                            const idx = Math.floor(brightness * (chars.length - 1)) % chars.length;
+                            const alpha = brightness * 0.4 + 0.02;
+                            const r = Math.floor(138 + brightness * 100);
+                            const g = Math.floor(255 - brightness * 25);
+                            const b = Math.floor(180 - brightness * 70);
+
+                            ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+                            ctx.fillText(chars[idx], px, py);
+                        }
                     }
                 });
                 t += 0.012;
