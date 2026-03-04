@@ -1053,59 +1053,42 @@
 
     <script>
         // ── WoW Character Renders ──
-        // Real WoW NPC render images from WoWHead's screenshot CDN
+        // Real 3D-rendered WoW dwarf NPC thumbnails from WoWHead's model viewer CDN
         (function() {
-            const renders = [
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46aborea.jpg', cls: 'warrior' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46bpaladin.jpg', cls: 'paladin' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46chunter.jpg', cls: 'hunter' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46drogue.jpg', cls: 'rogue' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46epriest.jpg', cls: 'priest' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46fmage.jpg', cls: 'mage' },
-                { img: 'https://wow.zamimg.com/uploads/screenshots/small/46gdk.jpg', cls: 'deathknight' },
-            ];
-
-            // Use WoWHead's actual race render images (dwarf male portraits)
-            const raceRenders = [
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-                'https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg',
-            ];
-
-            // WoW NPC portrait renders — these are actual 3D rendered character images
-            const npcPortraits = [
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064041.jpg',  // Dwarf warrior
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064042.jpg',  // Dwarf paladin
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064043.jpg',  // Dwarf hunter
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064044.jpg',  // Dwarf rogue
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064045.jpg',  // Dwarf priest
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064046.jpg',  // Dwarf mage
-                'https://wow.zamimg.com/uploads/screenshots/normal/1064047.jpg',  // DK
+            // displayId → folder is displayId % 256
+            // These are actual 3D model renders of iconic WoW dwarf characters
+            const dwarfRenders = [
+                { displayId: 4432,  folder: 80,  name: 'Magni Bronzebeard' },     // King of Ironforge — Warrior
+                { displayId: 21854, folder: 94,  name: 'Thargas Anvilmar' },      // Paladin / Defender
+                { displayId: 25839, folder: 239, name: 'Brann Bronzebeard' },     // Explorer — Hunter
+                { displayId: 3167,  folder: 95,  name: 'Dwarf Rogue' },           // Rogue type
+                { displayId: 23797, folder: 245, name: 'Moira Thaurissan' },      // Dark Iron — Priest
+                { displayId: 11831, folder: 55,  name: 'Dwarf Mage' },            // Mage type
+                { displayId: 26679, folder: 55,  name: 'Muradin Bronzebeard' },   // Death Knight / Frostborn
             ];
 
             const classes = ['warrior','paladin','hunter','rogue','priest','mage','deathknight'];
 
             document.querySelectorAll('.model-frame').forEach((frame, i) => {
-                // Create an img element with the class icon as primary, race icon as bg
+                const dwarf = dwarfRenders[i];
                 const img = document.createElement('img');
-                img.src = `https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg`;
-                img.alt = classes[i];
-                img.style.cssText = 'width:100%;height:100%;object-fit:cover;filter:sepia(0.3) hue-rotate(80deg) saturate(0.7) brightness(0.85) contrast(1.2);transition:filter 0.3s ease;';
+                // Primary: real 3D model render from WoWHead
+                img.src = `https://wow.zamimg.com/modelviewer/live/webthumbs/npc/${dwarf.folder}/${dwarf.displayId}.webp`;
+                img.alt = dwarf.name;
+                img.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center;background:#0a0a0a;filter:sepia(0.15) hue-rotate(80deg) saturate(0.8) brightness(0.9) contrast(1.15);transition:filter 0.3s ease;';
+                // Fallback to class icon if render fails
                 img.onerror = function() {
-                    this.src = `https://wow.zamimg.com/images/wow/icons/large/race_dwarf_male.jpg`;
+                    this.src = `https://wow.zamimg.com/images/wow/icons/large/classicon_${classes[i]}.jpg`;
+                    this.style.objectFit = 'cover';
                 };
                 frame.appendChild(img);
 
-                // On hover, brighten
+                // On hover, brighten and desaturate the green tint
                 frame.parentElement.addEventListener('mouseenter', () => {
-                    img.style.filter = 'sepia(0.2) hue-rotate(80deg) saturate(1) brightness(1.1) contrast(1.3)';
+                    img.style.filter = 'sepia(0.05) hue-rotate(80deg) saturate(1) brightness(1.15) contrast(1.2)';
                 });
                 frame.parentElement.addEventListener('mouseleave', () => {
-                    img.style.filter = 'sepia(0.3) hue-rotate(80deg) saturate(0.7) brightness(0.85) contrast(1.2)';
+                    img.style.filter = 'sepia(0.15) hue-rotate(80deg) saturate(0.8) brightness(0.9) contrast(1.15)';
                 });
             });
 
