@@ -840,7 +840,7 @@
             if (mirror) mesh.scale.x *= -1;
             scene.add(mesh);
 
-            const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: false, antialias: false });
+            const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: false, antialias: false, preserveDrawingBuffer: true });
             renderer.setSize(w, h); renderer.setPixelRatio(1);
 
             // Sampling canvas for dithering
