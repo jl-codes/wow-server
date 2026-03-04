@@ -107,7 +107,7 @@
         .fade.visible { opacity: 1; }
 
         /* ── Spacers ── */
-        .breath { height: 100vh; }
+        .breath { height: 15vh; }
         .breath-half { height: 50vh; }
         .breath-quarter { height: 25vh; }
         .gap { height: 80px; }
@@ -286,13 +286,13 @@
         /* ── ASCII art centerpiece ── */
         .ascii-centerpiece {
             width: 100%;
-            max-width: 400px;
+            max-width: 560px;
             margin: 0 auto;
             text-align: center;
         }
         .ascii-centerpiece canvas {
             width: 100%;
-            height: 300px;
+            height: 420px;
             display: block;
         }
 
@@ -582,8 +582,9 @@
         (function() {
             const canvas = document.getElementById('hearthstone');
             if (!canvas) return;
-            canvas.width = 400;
-            canvas.height = 300;
+            canvas.width = 560;
+            canvas.height = 420;
+            const W = 560, H = 420;
             const ctx = canvas.getContext('2d');
             const chars = ' .·:;░▒▓█';
             let t = 0;
@@ -591,8 +592,8 @@
             // Hearthstone shape: a spiral/swirl inside a rounded stone
             function sdf(x, y) {
                 // Normalize to -1..1
-                const nx = (x / 400) * 2 - 1;
-                const ny = (y / 300) * 2 - 1;
+                const nx = (x / W) * 2 - 1;
+                const ny = (y / H) * 2 - 1;
                 // Outer stone shape (rounded rect)
                 const dx = Math.abs(nx) - 0.55;
                 const dy = Math.abs(ny) - 0.65;
@@ -607,11 +608,11 @@
 
             function draw() {
                 ctx.fillStyle = '#0a0a0a';
-                ctx.fillRect(0, 0, 400, 300);
-                ctx.font = '8px "Share Tech Mono", monospace';
+                ctx.fillRect(0, 0, W, H);
+                ctx.font = '9px "Share Tech Mono", monospace';
 
-                for (let x = 0; x < 400; x += 6) {
-                    for (let y = 0; y < 300; y += 10) {
+                for (let x = 0; x < W; x += 6) {
+                    for (let y = 0; y < H; y += 10) {
                         const d = sdf(x, y);
                         if (d < 0.1) {
                             const intensity = Math.max(0, 1 - (d + 0.5));
@@ -673,11 +674,11 @@
             const fx = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: true, resolution: 0.15 });
             fx.setSize(w, h);
             Object.assign(fx.domElement.style, {
-                color: '#39ff85', backgroundColor: '#0a0a0a',
+                color: '#39ff85', backgroundColor: 'transparent',
                 fontFamily: "'Share Tech Mono', monospace",
                 fontSize: '6px', lineHeight: '6px', letterSpacing: '2px',
                 position: 'fixed', top: '0', pointerEvents: 'none',
-                zIndex: '1', overflow: 'hidden'
+                zIndex: '1', overflow: 'hidden', height: '100vh'
             });
             fx.domElement.style[canvasId === 'weapon-left' ? 'left' : 'right'] = '20px';
             fx.domElement.style.width = '200px';
