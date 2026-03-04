@@ -160,20 +160,22 @@
         /* ── Typography ── */
         .title {
             font-family: var(--font-pixel);
-            font-size: clamp(28px, 5vw, 48px);
+            font-size: clamp(36px, 7vw, 64px);
             color: #fff;
-            line-height: 1.1;
-            letter-spacing: 1px;
+            line-height: 1.05;
+            letter-spacing: 2px;
             font-weight: 400;
-            text-shadow: 0 0 30px rgba(255,255,255,0.3), 0 0 60px rgba(138,255,180,0.2);
+            -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+            text-shadow: 0 0 40px rgba(255,255,255,0.4), 0 0 80px rgba(138,255,180,0.25), 0 2px 0 rgba(0,0,0,0.5);
         }
 
         .subtitle {
             font-family: var(--font-pixel);
-            font-size: clamp(12px, 2vw, 16px);
-            color: rgba(255,255,255,0.7);
-            letter-spacing: 3px;
+            font-size: clamp(14px, 2.5vw, 20px);
+            color: #fff;
+            letter-spacing: 4px;
             text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3), 0 1px 0 rgba(0,0,0,0.5);
         }
 
         .prose {
