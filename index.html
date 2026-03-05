@@ -365,6 +365,13 @@
         }
         .hero-text.show { opacity: 1; }
 
+        /* Mobile: show hero text immediately, hide canvas */
+        @media (max-width: 800px) {
+            .hero-text { opacity: 1; }
+            .hero-section canvas { display: none; }
+            .hero-section { min-height: 80vh; }
+        }
+
         /* ── Promo Section ── */
         .promo-wrap {
             position: relative;
@@ -483,7 +490,7 @@
 
         <!-- ── Act I: The Call — video bg + text overlay ── -->
         <div class="hero-section" id="hero-section">
-            <video id="hero-video" src="hero.mp4" muted playsinline preload="auto"></video>
+            <video id="hero-video" muted playsinline preload="none" data-src="hero.mp4"></video>
             <canvas id="hero-canvas" aria-hidden="true"></canvas>
             <div class="hero-text" id="hero-text">
                 <h1 class="title">7 Dwarves<br>Adventure Co.</h1>
@@ -867,6 +874,15 @@
             const canvas = document.getElementById('hero-canvas');
             const heroText = document.getElementById('hero-text');
             if (!video || !canvas) return;
+
+            // Mobile: skip video processing entirely, text is shown via CSS
+            if (window.innerWidth <= 800) {
+                return;
+            }
+
+            // Desktop: load the video from data-src
+            video.src = video.dataset.src;
+            video.preload = 'auto';
 
             // High-res output for fine halftone dots
             const W = 600, H = 600;
