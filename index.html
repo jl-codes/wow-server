@@ -346,7 +346,9 @@
             align-items: center;
             justify-content: center;
         }
-        .hero-section video { display: none; }
+        .hero-section video {
+            display: none; /* Hidden on desktop — rendered to canvas instead */
+        }
         .hero-section canvas {
             position: absolute;
             top: 0; left: 50%;
@@ -365,11 +367,22 @@
         }
         .hero-text.show { opacity: 1; }
 
-        /* Mobile: show hero text immediately, hide canvas */
+        /* Mobile: show video natively + text overlay, hide canvas */
         @media (max-width: 800px) {
             .hero-text { opacity: 1; }
             .hero-section canvas { display: none; }
-            .hero-section { min-height: 80vh; }
+            .hero-section { min-height: 80vh; overflow: hidden; }
+            .hero-section video {
+                display: block !important;
+                position: absolute;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0.4;
+                filter: saturate(0) brightness(0.7);
+            }
         }
 
         /* ── Promo Section ── */
@@ -875,8 +888,17 @@
             const heroText = document.getElementById('hero-text');
             if (!video || !canvas) return;
 
-            // Mobile: skip video processing entirely, text is shown via CSS
+            // Mobile: load video natively (no dithering), text shown via CSS
             if (window.innerWidth <= 800) {
+                video.src = video.dataset.src;
+                video.preload = 'auto';
+                video.loop = true;
+                video.play().catch(() => {
+                    // Autoplay blocked — play on first interaction
+                    const playOnce = () => { video.play().catch(()=>{}); document.removeEventListener('touchstart', playOnce); document.removeEventListener('click', playOnce); };
+                    document.addEventListener('touchstart', playOnce, { once: true });
+                    document.addEventListener('click', playOnce, { once: true });
+                });
                 return;
             }
 
