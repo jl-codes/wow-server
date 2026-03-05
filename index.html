@@ -500,7 +500,7 @@
 
         <!-- ── Act I: The Call — video bg + text overlay ── -->
         <div class="hero-section" id="hero-section">
-            <video id="hero-video" muted playsinline preload="none" data-src="hero.mp4"></video>
+            <video id="hero-video" muted playsinline webkit-playsinline preload="none" data-src="hero.mp4"></video>
             <canvas id="hero-canvas" aria-hidden="true"></canvas>
             <div class="hero-text" id="hero-text">
                 <h1 class="title">7 Dwarves<br>Adventure Co.</h1>
@@ -1000,16 +1000,40 @@
                 if (heroText) heroText.classList.add('show');
             });
 
-            // Start
+            // Start — robust mobile autoplay handling
+            let playStarted = false;
+            function tryPlay() {
+                if (playStarted) return;
+                video.play().then(() => { playStarted = true; }).catch(() => {});
+            }
+
             function startVideo() {
-                video.play().catch(() => {
-                    document.addEventListener('click', () => video.play(), { once: true });
-                    document.addEventListener('scroll', () => video.play(), { once: true });
-                    document.addEventListener('touchstart', () => video.play(), { once: true });
-                });
+                // Try autoplay immediately
+                tryPlay();
+
+                // Fallback: play on any user interaction
+                const events = ['click', 'scroll', 'touchstart', 'touchend'];
+                function onInteract() {
+                    tryPlay();
+                    if (playStarted) {
+                        events.forEach(e => document.removeEventListener(e, onInteract));
+                    }
+                }
+                events.forEach(e => document.addEventListener(e, onInteract, { passive: true }));
+
+                // Also make the hero section itself tappable
+                const heroSection = document.getElementById('hero-section');
+                if (heroSection) {
+                    heroSection.style.cursor = 'pointer';
+                    heroSection.addEventListener('click', tryPlay, { once: true });
+                    heroSection.addEventListener('touchstart', tryPlay, { once: true });
+                }
+
                 requestAnimationFrame(draw);
             }
+
             video.addEventListener('loadeddata', startVideo);
+            video.addEventListener('canplay', startVideo);
             if (video.readyState >= 2) startVideo();
         })();
     </script>
