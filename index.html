@@ -234,7 +234,7 @@
         /* ── Grain divider ── */
         .horizon {
             width: 100%;
-            height: 80px;
+            height: 140px;
             overflow: hidden;
         }
         .horizon canvas {
@@ -787,7 +787,7 @@
             function size() {
                 canvases.forEach(c => {
                     c.width = Math.min(600, c.parentElement.offsetWidth);
-                    c.height = 80;
+                    c.height = 140;
                 });
             }
             size();
@@ -809,13 +809,12 @@
                         ms.smoothY += (ms.y - ms.smoothY) * 0.1;
                     }
 
-                    // Wide grid — more columns for horizontal divider
-                    const cols = 60;
-                    const rows = 8;
-                    const cellW = w / cols;
-                    const cellH = h / rows;
-                    const baseRadius = Math.min(cellW, cellH) * 0.38;
-                    const tOff = ci * 7.3; // offset per divider
+                    // Square cells — use cell size based on height, then fill width
+                    const cellSize = h / 22; // 22 rows as guide recommends
+                    const rows = 22;
+                    const cols = Math.ceil(w / cellSize);
+                    const baseRadius = cellSize * 0.38;
+                    const tOff = ci * 7.3;
 
                     for (let row = 0; row < rows; row++) {
                         for (let col = 0; col < cols; col++) {
@@ -825,7 +824,7 @@
 
                             let d = heavyNoise(nx + tOff, ny, elapsed);
 
-                            // Mouse distortion — warp the SDF near cursor
+                            // Mouse distortion
                             if (ms.active) {
                                 const dx = nx - ms.smoothX;
                                 const dy = ny - ms.smoothY;
@@ -843,18 +842,11 @@
                             const opacity = 1 - smoothstep(-0.1, 0.03 + breath, d);
                             if (opacity < 0.02) continue;
 
-                            // Vertical fade — softer at top/bottom edges
-                            const vy = (row + 0.5) / rows;
-                            const vFade = Math.sin(vy * Math.PI);
-
-                            const finalOpacity = opacity * vFade * 0.92;
-                            if (finalOpacity < 0.02) continue;
-
                             const r = baseRadius * (0.4 + opacity * 0.6);
-                            const cx = (col + 0.5) * cellW;
-                            const cy = (row + 0.5) * cellH;
+                            const cx = (col + 0.5) * cellSize;
+                            const cy = (row + 0.5) * cellSize;
 
-                            ctx.globalAlpha = finalOpacity;
+                            ctx.globalAlpha = opacity * 0.92;
                             ctx.fillStyle = '#8affb4';
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, Math.PI * 2);
