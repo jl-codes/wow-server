@@ -1036,7 +1036,7 @@
         async function loadSword() {
             const loader = new GLTFLoader();
             return new Promise((resolve, reject) => {
-                loader.load('frostmourne.glb', (gltf) => {
+                loader.load('frostmourne.glb?v=2', (gltf) => {
                     const model = gltf.scene;
                     // Override all materials with mint green
                     model.traverse(child => {
