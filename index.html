@@ -367,34 +367,18 @@
         }
         .hero-text.show { opacity: 1; }
 
-        /* Mobile: show video with dither effect + text overlay, hide canvas */
+        /* Mobile: use canvas dithering like desktop, hide native video */
         @media (max-width: 800px) {
             .hero-text { opacity: 1; }
-            .hero-section canvas { display: none; }
             .hero-section { min-height: 80vh; overflow: hidden; }
-            .hero-section video {
-                display: block !important;
+            .hero-section canvas#hero-canvas {
+                display: block;
                 position: absolute;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%) scale(1.15);
+                top: 0; left: 50%;
+                transform: translateX(-50%);
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
-                /* Clip bottom 12% to hide Vimeo watermark */
-                clip-path: inset(0 0 12% 0);
-                /* Boost contrast for dithered look */
-                filter: contrast(1.3) brightness(0.9);
-            }
-            /* Halftone dot overlay for dithered effect */
-            .hero-section::after {
-                content: '';
-                position: absolute;
-                inset: 0;
-                z-index: 2;
-                pointer-events: none;
-                background-image: radial-gradient(circle, rgba(0,0,0,0.4) 1px, transparent 1px);
-                background-size: 3px 3px;
-                mix-blend-mode: multiply;
+                object-fit: contain;
             }
         }
 
@@ -901,26 +885,15 @@
             const heroText = document.getElementById('hero-text');
             if (!video || !canvas) return;
 
-            // Mobile: load video natively (no dithering), text shown via CSS
-            if (window.innerWidth <= 800) {
-                video.src = video.dataset.src;
-                video.preload = 'auto';
-                video.loop = true;
-                video.play().catch(() => {
-                    // Autoplay blocked — play on first interaction
-                    const playOnce = () => { video.play().catch(()=>{}); document.removeEventListener('touchstart', playOnce); document.removeEventListener('click', playOnce); };
-                    document.addEventListener('touchstart', playOnce, { once: true });
-                    document.addEventListener('click', playOnce, { once: true });
-                });
-                return;
-            }
+            const isMobile = window.innerWidth <= 800;
 
-            // Desktop: load the video from data-src
+            // Load the video from data-src
             video.src = video.dataset.src;
             video.preload = 'auto';
 
-            // High-res output for fine halftone dots
-            const W = 600, H = 600;
+            // Mobile: lower res for performance; Desktop: full res
+            const W = isMobile ? 300 : 600;
+            const H = isMobile ? 300 : 600;
             canvas.width = W;
             canvas.height = H;
             const ctx = canvas.getContext('2d');
@@ -1033,6 +1006,7 @@
                 video.play().catch(() => {
                     document.addEventListener('click', () => video.play(), { once: true });
                     document.addEventListener('scroll', () => video.play(), { once: true });
+                    document.addEventListener('touchstart', () => video.play(), { once: true });
                 });
                 requestAnimationFrame(draw);
             }
