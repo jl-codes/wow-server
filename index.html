@@ -923,8 +923,7 @@
             let videoEnded = false;
 
             function renderFrame() {
-                ctx.fillStyle = '#0a0a0a';
-                ctx.fillRect(0, 0, W, H);
+                ctx.clearRect(0, 0, W, H);
 
                 if (video.readyState < 2) return;
 
