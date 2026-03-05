@@ -1050,7 +1050,7 @@
                     const size = box.getSize(new THREE.Vector3());
                     model.position.sub(center);
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    model.scale.multiplyScalar(3.0 / maxDim);
+                    model.scale.multiplyScalar(2.2 / maxDim);
                     resolve(model);
                 }, undefined, reject);
             });
@@ -1063,8 +1063,9 @@
             const glCanvas = document.createElement('canvas');
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0a0a);
-            const cam = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
-            cam.position.set(0, 0, 5.5);
+            const cam = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+            cam.position.set(0, 0, 4.5);
+            cam.lookAt(0, 0, 0);
 
             // Lighting — key, fill, ambient
             const key = new THREE.DirectionalLight(0x8affb4, 2.0);
