@@ -753,39 +753,35 @@
             });
         });
 
-        // ── Smooth liquid blob dividers (metaballs, interactive) ──
+        // ── Heavy Noise dot matrix dividers (interactive) ──
         (function() {
             const canvases = document.querySelectorAll('.lava-canvas');
-            let t = 0;
+            const startTime = performance.now();
+
+            function smoothstep(a, b, x) {
+                const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+                return t * t * (3 - 2 * t);
+            }
+
+            function heavyNoise(x, y, t) {
+                const v = Math.sin(x * 3.2 + t * 0.3) * Math.cos(y * 3.5 - t * 0.25)
+                    + Math.sin(x * 2.1 - y * 2.8 + t * 0.4) * 0.6
+                    + Math.cos(x * 4.5 + y * 2.2 - t * 0.5) * 0.4
+                    + Math.sin(x * 1.5 + y * 1.8 + t * 0.2) * 0.3;
+                return v * 0.22 - 0.08;
+            }
 
             const mouseState = new Map();
             canvases.forEach(c => {
-                const state = { x: -1, y: -1, active: false, smoothX: -1, smoothY: -1 };
+                const state = { x: -1, y: -1, active: false, smoothX: 0, smoothY: 0 };
                 mouseState.set(c, state);
                 c.addEventListener('mousemove', e => {
                     const rect = c.getBoundingClientRect();
-                    state.x = (e.clientX - rect.left) / rect.width;
-                    state.y = (e.clientY - rect.top) / rect.height;
+                    state.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    state.y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
                     state.active = true;
                 });
                 c.addEventListener('mouseleave', () => { state.active = false; });
-            });
-
-            // Each divider gets its own set of blob centers
-            const blobSets = [];
-            canvases.forEach((c, ci) => {
-                const blobs = [];
-                for (let i = 0; i < 7; i++) {
-                    blobs.push({
-                        x: Math.random(),
-                        y: 0.2 + Math.random() * 0.6,
-                        r: 0.06 + Math.random() * 0.08,
-                        vx: (Math.random() - 0.5) * 0.0004,
-                        vy: (Math.random() - 0.5) * 0.0002,
-                        phase: ci * 2 + i * 0.9
-                    });
-                }
-                blobSets.push(blobs);
             });
 
             function size() {
@@ -798,105 +794,75 @@
             window.addEventListener('resize', size);
 
             function draw() {
+                const elapsed = (performance.now() - startTime) / 1000;
+
                 canvases.forEach((c, ci) => {
                     const ctx = c.getContext('2d');
                     const w = c.width, h = c.height;
                     if (!w) return;
 
-                    const blobs = blobSets[ci];
-                    const ms = mouseState.get(c);
+                    ctx.clearRect(0, 0, w, h);
 
-                    // Smooth mouse tracking
+                    const ms = mouseState.get(c);
                     if (ms.active) {
-                        ms.smoothX += (ms.x - ms.smoothX) * 0.08;
-                        ms.smoothY += (ms.y - ms.smoothY) * 0.08;
+                        ms.smoothX += (ms.x - ms.smoothX) * 0.1;
+                        ms.smoothY += (ms.y - ms.smoothY) * 0.1;
                     }
 
-                    // Update blob positions (slow drift)
-                    blobs.forEach(b => {
-                        b.x += b.vx + Math.sin(t * 0.3 + b.phase) * 0.0003;
-                        b.y += b.vy + Math.cos(t * 0.25 + b.phase * 1.3) * 0.0001;
-                        // Wrap horizontally
-                        if (b.x < -0.1) b.x = 1.1;
-                        if (b.x > 1.1) b.x = -0.1;
-                        // Bounce vertically
-                        if (b.y < 0.1 || b.y > 0.9) b.vy *= -1;
-                    });
+                    // Wide grid — more columns for horizontal divider
+                    const cols = 60;
+                    const rows = 8;
+                    const cellW = w / cols;
+                    const cellH = h / rows;
+                    const baseRadius = Math.min(cellW, cellH) * 0.38;
+                    const tOff = ci * 7.3; // offset per divider
 
-                    // Render at half res for performance, then upscale with blur
-                    const S = 2; // scale factor
-                    const sw = Math.floor(w / S);
-                    const sh = Math.floor(h / S);
-                    const out = ctx.createImageData(sw, sh);
-                    const od = out.data;
+                    for (let row = 0; row < rows; row++) {
+                        for (let col = 0; col < cols; col++) {
+                            // Normalize to [-1, 1]
+                            const nx = (col / (cols - 1)) * 2 - 1;
+                            const ny = (row / (rows - 1)) * 2 - 1;
 
-                    for (let py = 0; py < sh; py++) {
-                        const ny = py / sh;
-                        // Vertical fade envelope
-                        const vFade = Math.sin(ny * Math.PI);
-                        const vFade2 = vFade * vFade; // sharper fade at edges
+                            let d = heavyNoise(nx + tOff, ny, elapsed);
 
-                        for (let px = 0; px < sw; px++) {
-                            const nx = px / sw;
-
-                            // Sum metaball field: f = sum(r² / dist²)
-                            let field = 0;
-                            for (let i = 0; i < blobs.length; i++) {
-                                const b = blobs[i];
-                                const dx = nx - b.x;
-                                const dy = (ny - b.y) * (w / h); // aspect correction
-                                const dist2 = dx * dx + dy * dy;
-                                field += (b.r * b.r) / (dist2 + 0.0001);
-                            }
-
-                            // Mouse as an extra blob (larger, stronger)
+                            // Mouse distortion — warp the SDF near cursor
                             if (ms.active) {
                                 const dx = nx - ms.smoothX;
-                                const dy = (ny - ms.smoothY) * (w / h);
-                                const dist2 = dx * dx + dy * dy;
-                                // Mouse pushes field — creates a bulge/distortion
-                                field += 0.012 / (dist2 + 0.0005);
-                                // Also warp nearby blobs slightly (handled by field addition)
+                                const dy = ny - ms.smoothY;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < 0.6) {
+                                    const inf = 1 - dist / 0.6;
+                                    d -= inf * inf * 0.15;
+                                }
                             }
 
-                            // Threshold for smooth blob edges
-                            const threshold = 1.2;
-                            if (field < threshold * 0.3) continue;
+                            // Breathing effect
+                            const breath = Math.sin(col * 0.7 + elapsed * 1.5) * Math.cos(row * 0.5 + elapsed * 1.1) * 0.025;
 
-                            // Smooth edge falloff
-                            const edge = Math.min(1, (field - threshold * 0.3) / (threshold * 0.7));
-                            const smooth = edge * edge * (3 - 2 * edge); // smoothstep
+                            // Smoothstep opacity
+                            const opacity = 1 - smoothstep(-0.1, 0.03 + breath, d);
+                            if (opacity < 0.02) continue;
 
-                            const brightness = smooth * vFade2;
-                            if (brightness < 0.01) continue;
+                            // Vertical fade — softer at top/bottom edges
+                            const vy = (row + 0.5) / rows;
+                            const vFade = Math.sin(vy * Math.PI);
 
-                            const alpha = Math.floor(brightness * 180);
-                            const oi = (py * sw + px) * 4;
-                            od[oi] = 138;
-                            od[oi + 1] = 255;
-                            od[oi + 2] = 180;
-                            od[oi + 3] = alpha;
+                            const finalOpacity = opacity * vFade * 0.92;
+                            if (finalOpacity < 0.02) continue;
+
+                            const r = baseRadius * (0.4 + opacity * 0.6);
+                            const cx = (col + 0.5) * cellW;
+                            const cy = (row + 0.5) * cellH;
+
+                            ctx.globalAlpha = finalOpacity;
+                            ctx.fillStyle = '#8affb4';
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                            ctx.fill();
                         }
                     }
-
-                    // Draw half-res to a temp canvas, then upscale with smoothing
-                    const tmp = document.createElement('canvas');
-                    tmp.width = sw; tmp.height = sh;
-                    tmp.getContext('2d').putImageData(out, 0, 0);
-
-                    ctx.clearRect(0, 0, w, h);
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(tmp, 0, 0, w, h);
-
-                    // Extra glow pass — draw again with blur
-                    ctx.save();
-                    ctx.filter = 'blur(6px)';
-                    ctx.globalAlpha = 0.4;
-                    ctx.drawImage(tmp, 0, 0, w, h);
-                    ctx.restore();
+                    ctx.globalAlpha = 1;
                 });
-                t += 0.016;
                 requestAnimationFrame(draw);
             }
             draw();
@@ -1032,13 +998,12 @@
         })();
     </script>
 
-    <!-- Sketchfab Viewer API -->
-    <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+    <!-- Three.js Dithered Frostmourne -->
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"}}</script>
+    <script type="module">
+        import * as THREE from 'three';
 
-    <!-- Frostmourne Weapons via Sketchfab + Dither -->
-    <script>
-    (function() {
-        if (window.innerWidth < 800) return;
+        if (window.innerWidth < 800) throw new Error('skip');
 
         const BAYER8 = [
             [ 0, 32,  8, 40,  2, 34, 10, 42],
@@ -1051,161 +1016,150 @@
             [63, 31, 55, 23, 61, 29, 53, 21]
         ].map(row => row.map(v => v / 64));
 
-        const GAMMA = 0.55;
-        const DOT = 3;
-        const MODEL_UID = 'd018d21ccf774a728082b30e3f8e9e9d'; // Frostmourne by DanielFQZ
-
+        const GAMMA = 0.55, DOT = 3;
         let scrollY = 0;
         window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
 
-        function ditherImageData(source, outCanvas, w, h) {
-            const ctx = outCanvas.getContext('2d');
-            const COLS = Math.floor(w / DOT);
-            const ROWS = Math.floor(h / DOT);
+        function buildFrostmourne() {
+            const g = new THREE.Group();
+            const blade = new THREE.MeshPhongMaterial({ color: 0x8affb4, emissive: 0x1a3a25, shininess: 90, flatShading: true });
+            const glow = new THREE.MeshPhongMaterial({ color: 0xb0ffd0, emissive: 0x8affb4, emissiveIntensity: 0.8, shininess: 120 });
+            const dark = new THREE.MeshPhongMaterial({ color: 0x55dd88, emissive: 0x112211, flatShading: true });
 
-            // Sample source at low res
+            // Jagged blade
+            const s = new THREE.Shape();
+            s.moveTo(0, 0);
+            s.lineTo(0.18, 0.3); s.lineTo(0.22, 0.8); s.lineTo(0.16, 1.2);
+            s.lineTo(0.20, 1.5); s.lineTo(0.14, 1.8); s.lineTo(0.18, 2.1);
+            s.lineTo(0.10, 2.5); s.lineTo(0.06, 2.8); s.lineTo(0, 3.0);
+            s.lineTo(-0.06, 2.8); s.lineTo(-0.10, 2.5); s.lineTo(-0.18, 2.1);
+            s.lineTo(-0.14, 1.8); s.lineTo(-0.20, 1.5); s.lineTo(-0.16, 1.2);
+            s.lineTo(-0.22, 0.8); s.lineTo(-0.18, 0.3); s.lineTo(0, 0);
+            const bm = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), blade);
+            bm.position.set(0, -0.3, -0.02); g.add(bm);
+
+            // Rune channel + marks
+            g.add(new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.4, 0.06), glow).translateY(1.2));
+            for (let i = 0; i < 5; i++) g.add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.06), glow).translateY(0.4 + i * 0.5));
+
+            // Crossguard
+            const cl = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.9, 5), dark);
+            cl.position.set(-0.45, -0.25, 0); cl.rotation.z = 0.6; g.add(cl);
+            const cr = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.9, 5), dark);
+            cr.position.set(0.45, -0.25, 0); cr.rotation.z = -0.6; g.add(cr);
+            const tl = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.2, 4), blade);
+            tl.position.set(-0.8, -0.05, 0); tl.rotation.z = 0.8; g.add(tl);
+            const tr = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.2, 4), blade);
+            tr.position.set(0.8, -0.05, 0); tr.rotation.z = -0.8; g.add(tr);
+
+            // Skull pommel
+            const sk = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), dark);
+            sk.position.set(0, -0.35, 0); sk.scale.set(1, 1.2, 0.8); g.add(sk);
+            g.add(new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), glow).translateX(-0.04).translateY(-0.32).translateZ(0.08));
+            g.add(new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), glow).translateX(0.04).translateY(-0.32).translateZ(0.08));
+
+            // Grip
+            g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6), dark).translateY(-0.75));
+            for (let i = 0; i < 4; i++) {
+                const w = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 4, 8), blade);
+                w.position.set(0, -0.5 - i * 0.15, 0); w.rotation.x = Math.PI / 2; g.add(w);
+            }
+            g.add(new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), blade).translateY(-1.12));
+
+            // Particles
+            const pc = 40, pGeo = new THREE.BufferGeometry();
+            const pos = new Float32Array(pc * 3), vel = [];
+            for (let i = 0; i < pc; i++) {
+                pos[i*3] = (Math.random()-0.5)*0.8;
+                pos[i*3+1] = Math.random()*3.0-0.5;
+                pos[i*3+2] = (Math.random()-0.5)*0.4;
+                vel.push({ x:(Math.random()-0.5)*0.003, y:0.002+Math.random()*0.005, z:(Math.random()-0.5)*0.002 });
+            }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x8affb4, size: 0.04, transparent: true, opacity: 0.7 }));
+            g.add(particles);
+            g.userData = { particles, vel, pos };
+            g.scale.setScalar(0.65);
+            return g;
+        }
+
+        function weapon(canvasId, mirror) {
+            const outCanvas = document.getElementById(canvasId);
+            if (!outCanvas) return;
+            const w = outCanvas.offsetWidth, h = outCanvas.offsetHeight;
+            const glCanvas = document.createElement('canvas');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            const cam = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+            cam.position.set(0, 0, 5.5);
+            scene.add(new THREE.DirectionalLight(0x8affb4, 1.8).translateX(2).translateY(3).translateZ(4));
+            scene.add(new THREE.DirectionalLight(0x55dd88, 0.8).translateX(-2).translateY(-1).translateZ(2));
+            scene.add(new THREE.AmbientLight(0x8affb4, 0.2));
+
+            const mesh = buildFrostmourne();
+            if (mirror) mesh.scale.x *= -1;
+            scene.add(mesh);
+
+            const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: false, antialias: false, preserveDrawingBuffer: true });
+            renderer.setSize(w, h); renderer.setPixelRatio(1);
+
+            const COLS = Math.floor(w / DOT), ROWS = Math.floor(h / DOT);
             const samp = document.createElement('canvas');
             samp.width = COLS; samp.height = ROWS;
             const sCtx = samp.getContext('2d', { willReadFrequently: true });
-            sCtx.drawImage(source, 0, 0, COLS, ROWS);
-            const frame = sCtx.getImageData(0, 0, COLS, ROWS);
-            const px = frame.data;
+            outCanvas.width = w; outCanvas.height = h;
+            const ctx = outCanvas.getContext('2d');
+            const dir = mirror ? -1 : 1;
 
-            const out = ctx.createImageData(w, h);
-            const od = out.data;
+            function loop() {
+                requestAnimationFrame(loop);
+                mesh.rotation.y = scrollY * 0.003 * dir;
+                mesh.position.y = Math.sin(Date.now() * 0.001) * 0.08;
 
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    const i = (y * COLS + x) * 4;
-                    let brightness = (px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114) / 255;
-                    if (brightness < 0.05) continue;
-                    brightness = Math.pow(brightness, GAMMA);
-                    const threshold = BAYER8[y % 8][x % 8];
-                    if (brightness > threshold) {
-                        const alpha = Math.min(255, Math.floor((brightness * 0.85 + 0.15) * 255));
-                        for (let dy = 0; dy < DOT; dy++) {
-                            for (let dx = 0; dx < DOT; dx++) {
-                                const ox = x * DOT + dx;
-                                const oy = y * DOT + dy;
+                // Animate particles
+                const p = mesh.userData.pos, v = mesh.userData.vel;
+                for (let i = 0; i < v.length; i++) {
+                    p[i*3] += v[i].x + Math.sin(Date.now()*0.002+i)*0.001;
+                    p[i*3+1] += v[i].y;
+                    p[i*3+2] += v[i].z;
+                    if (p[i*3+1] > 3.5) { p[i*3]=(Math.random()-0.5)*0.6; p[i*3+1]=-0.5; p[i*3+2]=(Math.random()-0.5)*0.3; }
+                }
+                mesh.userData.particles.geometry.attributes.position.needsUpdate = true;
+                mesh.userData.particles.material.opacity = 0.4 + Math.sin(Date.now()*0.003)*0.3;
+
+                renderer.render(scene, cam);
+                sCtx.drawImage(glCanvas, 0, 0, COLS, ROWS);
+                const frame = sCtx.getImageData(0, 0, COLS, ROWS);
+                const px = frame.data;
+                const out = ctx.createImageData(w, h);
+                const od = out.data;
+
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const i = (y * COLS + x) * 4;
+                        let b = (px[i]*0.299 + px[i+1]*0.587 + px[i+2]*0.114) / 255;
+                        if (b < 0.05) continue;
+                        b = Math.pow(b, GAMMA);
+                        if (b > BAYER8[y%8][x%8]) {
+                            const a = Math.min(255, Math.floor((b*0.85+0.15)*255));
+                            for (let dy = 0; dy < DOT; dy++) for (let dx = 0; dx < DOT; dx++) {
+                                const ox = x*DOT+dx, oy = y*DOT+dy;
                                 if (ox >= w || oy >= h) continue;
-                                const oi = (oy * w + ox) * 4;
-                                od[oi] = 138; od[oi+1] = 255; od[oi+2] = 180; od[oi+3] = alpha;
+                                const oi = (oy*w+ox)*4;
+                                od[oi]=138; od[oi+1]=255; od[oi+2]=180; od[oi+3]=a;
                             }
                         }
                     }
                 }
+                ctx.putImageData(out, 0, 0);
             }
-            ctx.putImageData(out, 0, 0);
+            loop();
         }
 
-        function setupWeapon(canvasId, mirror) {
-            const outCanvas = document.getElementById(canvasId);
-            if (!outCanvas) return;
-            const w = outCanvas.offsetWidth, h = outCanvas.offsetHeight;
-            outCanvas.width = w; outCanvas.height = h;
-            const ctx = outCanvas.getContext('2d');
-
-            // Create hidden iframe for Sketchfab viewer
-            const container = document.createElement('div');
-            container.style.cssText = 'position:fixed;left:-9999px;top:0;width:200px;height:' + h + 'px;overflow:hidden;';
-            document.body.appendChild(container);
-
-            const iframe = document.createElement('iframe');
-            iframe.style.cssText = 'width:200px;height:' + h + 'px;border:none;';
-            container.appendChild(iframe);
-
-            const client = new Sketchfab(iframe);
-            let api = null;
-            let capturing = false;
-
-            client.init(MODEL_UID, {
-                success: function(apiInstance) {
-                    api = apiInstance;
-                    api.start();
-                    api.addEventListener('viewerready', function() {
-                        // Set dark background
-                        api.setBackground({ color: [0.04, 0.04, 0.04, 1] });
-                        // Disable UI
-                        api.setAnnotationsVisible(false);
-
-                        // Start capture loop
-                        const dir = mirror ? -1 : 1;
-                        let lastAngle = 0;
-
-                        function captureLoop() {
-                            requestAnimationFrame(captureLoop);
-
-                            // Rotate model based on scroll
-                            const angle = scrollY * 0.003 * dir;
-                            if (Math.abs(angle - lastAngle) > 0.001) {
-                                lastAngle = angle;
-                                // Orbit camera around model
-                                const dist = 1.5;
-                                const x = Math.sin(angle) * dist;
-                                const z = Math.cos(angle) * dist;
-                                api.setCameraLookAt([x, 0.3, z], [0, 0.3, 0], 0);
-                            }
-
-                            // Capture screenshot and dither
-                            if (!capturing) {
-                                capturing = true;
-                                api.getScreenShot('image/png', function(err, result) {
-                                    capturing = false;
-                                    if (err || !result) return;
-                                    const img = new Image();
-                                    img.onload = function() {
-                                        ditherImageData(img, outCanvas, w, h);
-                                    };
-                                    img.src = result;
-                                });
-                            }
-                        }
-                        captureLoop();
-                    });
-                },
-                error: function() {
-                    console.log('Sketchfab failed, using fallback');
-                    // Fallback: show a simple dithered static sword silhouette
-                    ctx.fillStyle = '#0a0a0a';
-                    ctx.fillRect(0, 0, w, h);
-                },
-                ui_stop: 0,
-                ui_infos: 0,
-                ui_inspector: 0,
-                ui_settings: 0,
-                ui_watermark: 0,
-                ui_annotations: 0,
-                ui_color: '0a0a0a',
-                ui_fadeout: 0,
-                transparent: 0,
-                autostart: 1,
-                camera: 0,
-                preload: 1,
-                ui_hint: 0,
-                ui_ar: 0,
-                ui_help: 0,
-                ui_vr: 0,
-                scrollwheel: 0,
-                double_click: 0,
-                autospin: 0
-            });
-        }
-
-        // Wait for Sketchfab API to load
-        if (typeof Sketchfab !== 'undefined') {
-            setupWeapon('weapon-left', false);
-            setupWeapon('weapon-right', true);
-        } else {
-            window.addEventListener('load', function() {
-                setTimeout(function() {
-                    if (typeof Sketchfab !== 'undefined') {
-                        setupWeapon('weapon-left', false);
-                        setupWeapon('weapon-right', true);
-                    }
-                }, 1000);
-            });
-        }
-    })();
+        try {
+            weapon('weapon-left', false);
+            weapon('weapon-right', true);
+        } catch(e) { console.log('Weapons disabled:', e.message); }
     </script>
 </body>
 </html>
